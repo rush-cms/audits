@@ -23,9 +23,11 @@ final class AuditController extends Controller
             $payload = $payload[0];
         }
 
+        $lighthouseResult = $payload['lighthouseResult'] ?? $payload;
+
         $lang = $this->validateLocale($request->input('lang', 'en'));
 
-        $auditData = AuditData::fromPageSpeedPayload($payload);
+        $auditData = AuditData::fromLighthouseResult($lighthouseResult);
 
         GenerateAuditPdfJob::dispatch($auditData, $lang);
 

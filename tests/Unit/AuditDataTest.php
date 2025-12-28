@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 use App\Data\AuditData;
 
-it('parses real pagespeed payload extracting only vital metrics', function (): void {
+it('parses lighthouseResult object extracting only vital metrics', function (): void {
     $fixturePath = dirname(__DIR__).'/Fixtures/pagespeed_mock.json';
     $json = file_get_contents($fixturePath);
     $payload = json_decode($json, true);
 
-    $auditData = AuditData::fromPageSpeedPayload($payload);
+    $data = $payload[0] ?? $payload;
+    $lighthouseResult = $data['lighthouseResult'];
+
+    $auditData = AuditData::fromLighthouseResult($lighthouseResult);
 
     expect($auditData->targetUrl->__toString())->toBe('https://www.rafhael.com.br/');
     expect($auditData->score->toPercentage())->toBe(100);
@@ -21,14 +24,15 @@ it('parses real pagespeed payload extracting only vital metrics', function (): v
     expect($auditData->auditId)->toBeString()->not->toBeEmpty();
 });
 
-it('handles single object payload without array wrapper', function (): void {
+it('handles direct lighthouseResult without wrapper', function (): void {
     $fixturePath = dirname(__DIR__).'/Fixtures/pagespeed_mock.json';
     $json = file_get_contents($fixturePath);
     $payload = json_decode($json, true);
 
-    $singleObject = $payload[0];
+    $data = $payload[0] ?? $payload;
+    $lighthouseResult = $data['lighthouseResult'];
 
-    $auditData = AuditData::fromPageSpeedPayload($singleObject);
+    $auditData = AuditData::fromLighthouseResult($lighthouseResult);
 
     expect($auditData->targetUrl->__toString())->toBe('https://www.rafhael.com.br/');
     expect($auditData->score->toPercentage())->toBe(100);
