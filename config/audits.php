@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 return [
     'brand_name' => env('AUDITS_BRAND_NAME', 'Rush CMS'),
-    'logo_url' => env('AUDITS_LOGO_URL', 'https://rushcms.com/assets/logo-dark.png'),
+    'logo_path' => env('AUDITS_LOGO_PATH'),
 
     'pagespeed' => [
         'api_key' => env('PAGESPEED_API_KEY'),

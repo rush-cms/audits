@@ -2,8 +2,8 @@
     <div class="bg-gradient-to-r from-slate-900 to-slate-800 px-8 py-6">
         <div class="flex justify-between items-center">
             <div class="flex items-center gap-4">
-                @if(config('audits.logo_url'))
-                    <img src="{{ config('audits.logo_url') }}" alt="{{ config('audits.brand_name') }}" class="h-10">
+                @if(config('audits.logo_path'))
+                    <img src="{{ asset(config('audits.logo_path')) }}" alt="{{ config('audits.brand_name') }}" class="h-10">
                 @else
                     <span class="text-2xl font-bold text-white">{{ config('audits.brand_name') }}</span>
                 @endif
