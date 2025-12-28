@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\IncrementScanCountAction;
 use App\Data\AuditData;
 use App\Http\Controllers\Controller;
 use App\Jobs\FetchPageSpeedJob;
@@ -16,8 +17,10 @@ final class AuditController extends Controller
 {
     private const array ALLOWED_LOCALES = ['en', 'pt_BR', 'es'];
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, IncrementScanCountAction $countAction): JsonResponse
     {
+        $countAction->execute();
+
         $lang = $this->validateLocale($request->input('lang', 'en'));
 
         if ($request->has('url')) {
