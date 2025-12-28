@@ -36,10 +36,10 @@ POST /api/v1/scan (JSON do PageSpeed)
 |------|-----------|--------|
 | 1 | Fundação e Dependências | ✅ Completa |
 | 2 | Domínio e Modelagem | ✅ Completa |
-| 3 | Camada de Aplicação | 🔲 Pendente |
-| 4 | Interface Pública (API) | 🔲 Pendente |
-| 5 | Console Commands | 🔲 Pendente |
-| 6 | Testes Automatizados | 🔲 Pendente |
+| 3 | Camada de Aplicação | ✅ Completa |
+| 4 | Interface Pública (API) | ✅ Completa |
+| 5 | Console Commands | ✅ Completa |
+| 6 | Testes Automatizados | ✅ Completa |
 
 ## Arquivos de Referência
 
