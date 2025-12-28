@@ -148,3 +148,9 @@ Edit `config/audits.php` or publish the views to customize the PDF layout:
 ```bash
 php artisan vendor:publish --tag=audit-views
 ```
+
+## License
+
+This project is open-sourced software licensed under the **[GNU Affero General Public License v3.0 (AGPLv3)](LICENSE)**.
+
+The AGPLv3 license ensures that if this software is run over a network (SaaS), the source code must be made available to users.
