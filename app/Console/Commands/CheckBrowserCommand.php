@@ -24,19 +24,28 @@ final class CheckBrowserCommand extends Command
         $this->newLine();
 
         try {
-            $html = '<html><body><h1>Test</h1></body></html>';
+            $tempPath = storage_path('app/browsershot-test.pdf');
 
-            Browsershot::html($html)
+            Browsershot::url('https://example.com')
                 ->setNodeBinary(config('audits.browsershot.node_binary'))
                 ->setNpmBinary(config('audits.browsershot.npm_binary'))
                 ->setChromePath(config('audits.browsershot.chrome_path'))
-                ->pdf();
+                ->noSandbox()
+                ->save($tempPath);
 
-            $this->info('✓ Browsershot is working correctly!');
+            if (file_exists($tempPath)) {
+                $size = filesize($tempPath);
+                unlink($tempPath);
+                $this->info("✓ Browsershot is working correctly! (PDF: {$size} bytes)");
 
-            return self::SUCCESS;
+                return self::SUCCESS;
+            }
+
+            $this->error('✗ PDF was not created');
+
+            return self::FAILURE;
         } catch (\Throwable $e) {
-            $this->error('✗ Browsershot failed: '.$e->getMessage());
+            $this->error('✗ Browsershot failed: ' . $e->getMessage());
 
             return self::FAILURE;
         }

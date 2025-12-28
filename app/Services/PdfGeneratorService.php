@@ -14,24 +14,31 @@ final class PdfGeneratorService
     {
         $html = view('reports.audit', ['audit' => $data])->render();
 
-        $filename = $data->auditId.'.pdf';
+        $filename = $data->auditId . '.pdf';
+        $htmlFilename = $data->auditId . '.html';
         $directory = 'reports';
 
         Storage::disk('public')->makeDirectory($directory);
 
-        $path = Storage::disk('public')->path($directory.'/'.$filename);
+        $pdfPath = Storage::disk('public')->path($directory . '/' . $filename);
+        $htmlPath = Storage::disk('public')->path($directory . '/' . $htmlFilename);
 
-        Browsershot::html($html)
+        file_put_contents($htmlPath, $html);
+
+        Browsershot::htmlFromFilePath($htmlPath)
             ->setNodeBinary(config('audits.browsershot.node_binary'))
             ->setNpmBinary(config('audits.browsershot.npm_binary'))
             ->setChromePath(config('audits.browsershot.chrome_path'))
+            ->noSandbox()
             ->format('A4')
             ->margins(15, 15, 15, 15)
             ->showBackground()
             ->waitUntilNetworkIdle()
-            ->save($path);
+            ->save($pdfPath);
 
-        return $path;
+        unlink($htmlPath);
+
+        return $pdfPath;
     }
 
     public function getPublicUrl(string $path): string
