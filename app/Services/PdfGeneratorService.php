@@ -10,8 +10,10 @@ use Spatie\Browsershot\Browsershot;
 
 final class PdfGeneratorService
 {
-    public function generate(AuditData $data): string
+    public function generate(AuditData $data, string $lang = 'en'): string
     {
+        app()->setLocale($lang);
+
         $tailwindCss = $this->getTailwindCss();
 
         $html = view('reports.audit', [
@@ -19,14 +21,14 @@ final class PdfGeneratorService
             'tailwindCss' => $tailwindCss,
         ])->render();
 
-        $filename = $data->auditId . '.pdf';
-        $htmlFilename = $data->auditId . '.html';
+        $filename = $data->auditId.'.pdf';
+        $htmlFilename = $data->auditId.'.html';
         $directory = 'reports';
 
         Storage::disk('public')->makeDirectory($directory);
 
-        $pdfPath = Storage::disk('public')->path($directory . '/' . $filename);
-        $htmlPath = Storage::disk('public')->path($directory . '/' . $htmlFilename);
+        $pdfPath = Storage::disk('public')->path($directory.'/'.$filename);
+        $htmlPath = Storage::disk('public')->path($directory.'/'.$htmlFilename);
 
         file_put_contents($htmlPath, $html);
 
@@ -50,7 +52,7 @@ final class PdfGeneratorService
     {
         $filename = basename($path);
 
-        return asset('storage/reports/' . $filename);
+        return asset('storage/reports/'.$filename);
     }
 
     private function getTailwindCss(): string
@@ -61,20 +63,28 @@ final class PdfGeneratorService
             return $this->getFallbackCss();
         }
 
-        $manifest = json_decode(file_get_contents($manifestPath), true);
+        $manifestContent = file_get_contents($manifestPath);
+
+        if ($manifestContent === false) {
+            return $this->getFallbackCss();
+        }
+
+        $manifest = json_decode($manifestContent, true);
         $cssFile = $manifest['resources/css/app.css']['file'] ?? null;
 
         if (! $cssFile) {
             return $this->getFallbackCss();
         }
 
-        $cssPath = public_path('build/' . $cssFile);
+        $cssPath = public_path('build/'.$cssFile);
 
         if (! file_exists($cssPath)) {
             return $this->getFallbackCss();
         }
 
-        return file_get_contents($cssPath);
+        $cssContent = file_get_contents($cssPath);
+
+        return $cssContent !== false ? $cssContent : $this->getFallbackCss();
     }
 
     private function getFallbackCss(): string

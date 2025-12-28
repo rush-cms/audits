@@ -9,14 +9,14 @@
                 @endif
             </div>
             <div class="text-slate-400 text-sm">
-                {{ now()->format('M d, Y \a\t H:i') }} UTC
+                {{ __('audit.generated_at') }} {{ now()->format('M d, Y H:i') }} UTC
             </div>
         </div>
     </div>
 
     <div class="px-8 py-8">
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-slate-900 mb-2">Performance Audit Report</h1>
+            <h1 class="text-3xl font-bold text-slate-900 mb-2">{{ __('audit.title') }}</h1>
             <a href="{{ $audit->targetUrl }}" class="text-blue-600 hover:text-blue-700 text-lg break-all">
                 {{ $audit->targetUrl }}
             </a>
@@ -36,29 +36,37 @@
                         </svg>
                         <div class="absolute inset-0 flex flex-col items-center justify-center">
                             <span class="text-5xl font-bold text-slate-900">{{ $audit->score->toPercentage() }}</span>
-                            <span class="text-slate-500 text-sm">out of 100</span>
+                            <span class="text-slate-500 text-sm">{{ __('audit.out_of') }}</span>
                         </div>
                     </div>
                     <div class="mt-4">
+                        @php
+                            $color = $audit->score->getColor();
+                            $label = match($color) {
+                                'green' => __('audit.good'),
+                                'orange' => __('audit.needs_improvement'),
+                                default => __('audit.poor'),
+                            };
+                        @endphp
                         <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
-                            {{ $audit->score->getColor() === 'green' ? 'bg-green-100 text-green-700' : ($audit->score->getColor() === 'orange' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700') }}">
+                            {{ $color === 'green' ? 'bg-green-100 text-green-700' : ($color === 'orange' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700') }}">
                             <span class="w-2 h-2 rounded-full
-                                {{ $audit->score->getColor() === 'green' ? 'bg-green-500' : ($audit->score->getColor() === 'orange' ? 'bg-amber-500' : 'bg-red-500') }}"></span>
-                            {{ $audit->score->getLabel() }}
+                                {{ $color === 'green' ? 'bg-green-500' : ($color === 'orange' ? 'bg-amber-500' : 'bg-red-500') }}"></span>
+                            {{ $label }}
                         </span>
                     </div>
                 </div>
             </div>
 
             <div class="lg:col-span-2 space-y-4">
-                <h3 class="text-lg font-semibold text-slate-900 mb-4">Core Web Vitals</h3>
+                <h3 class="text-lg font-semibold text-slate-900 mb-4">{{ __('audit.core_web_vitals') }}</h3>
 
                 <div class="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="text-sm font-medium text-slate-500 uppercase tracking-wide">LCP</div>
+                            <div class="text-sm font-medium text-slate-500 uppercase tracking-wide">{{ __('audit.lcp') }}</div>
                             <div class="text-2xl font-bold text-slate-900 mt-1">{{ $audit->lcp->format() }}</div>
-                            <div class="text-xs text-slate-400 mt-1">Largest Contentful Paint</div>
+                            <div class="text-xs text-slate-400 mt-1">{{ __('audit.lcp_full') }}</div>
                         </div>
                         <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
                             <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,7 +84,7 @@
                         </div>
                         <div class="flex justify-between text-xs text-slate-400 mt-1">
                             <span>0s</span>
-                            <span class="text-green-600">Good ≤2.5s</span>
+                            <span class="text-green-600">{{ __('audit.good') }} ≤2.5s</span>
                             <span>4s+</span>
                         </div>
                     </div>
@@ -85,9 +93,9 @@
                 <div class="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="text-sm font-medium text-slate-500 uppercase tracking-wide">FCP</div>
+                            <div class="text-sm font-medium text-slate-500 uppercase tracking-wide">{{ __('audit.fcp') }}</div>
                             <div class="text-2xl font-bold text-slate-900 mt-1">{{ $audit->fcp->format() }}</div>
-                            <div class="text-xs text-slate-400 mt-1">First Contentful Paint</div>
+                            <div class="text-xs text-slate-400 mt-1">{{ __('audit.fcp_full') }}</div>
                         </div>
                         <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center">
                             <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,7 +114,7 @@
                         </div>
                         <div class="flex justify-between text-xs text-slate-400 mt-1">
                             <span>0s</span>
-                            <span class="text-green-600">Good ≤1.8s</span>
+                            <span class="text-green-600">{{ __('audit.good') }} ≤1.8s</span>
                             <span>3s+</span>
                         </div>
                     </div>
@@ -115,9 +123,9 @@
                 <div class="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="text-sm font-medium text-slate-500 uppercase tracking-wide">CLS</div>
+                            <div class="text-sm font-medium text-slate-500 uppercase tracking-wide">{{ __('audit.cls') }}</div>
                             <div class="text-2xl font-bold text-slate-900 mt-1">{{ $audit->cls->format() }}</div>
-                            <div class="text-xs text-slate-400 mt-1">Cumulative Layout Shift</div>
+                            <div class="text-xs text-slate-400 mt-1">{{ __('audit.cls_full') }}</div>
                         </div>
                         <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
                             <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,7 +143,7 @@
                         </div>
                         <div class="flex justify-between text-xs text-slate-400 mt-1">
                             <span>0</span>
-                            <span class="text-green-600">Good ≤0.1</span>
+                            <span class="text-green-600">{{ __('audit.good') }} ≤0.1</span>
                             <span>0.25+</span>
                         </div>
                     </div>
@@ -148,20 +156,20 @@
                 <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                What do these metrics mean?
+                {{ __('audit.what_means') }}
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
-                    <div class="font-medium text-slate-700">LCP (Largest Contentful Paint)</div>
-                    <p class="text-slate-500 mt-1">Measures loading performance. Should occur within 2.5 seconds of page load.</p>
+                    <div class="font-medium text-slate-700">{{ __('audit.lcp') }} ({{ __('audit.lcp_full') }})</div>
+                    <p class="text-slate-500 mt-1">{{ __('audit.lcp_desc') }}</p>
                 </div>
                 <div>
-                    <div class="font-medium text-slate-700">FCP (First Contentful Paint)</div>
-                    <p class="text-slate-500 mt-1">Marks when the first text or image is painted. Good scores are under 1.8 seconds.</p>
+                    <div class="font-medium text-slate-700">{{ __('audit.fcp') }} ({{ __('audit.fcp_full') }})</div>
+                    <p class="text-slate-500 mt-1">{{ __('audit.fcp_desc') }}</p>
                 </div>
                 <div>
-                    <div class="font-medium text-slate-700">CLS (Cumulative Layout Shift)</div>
-                    <p class="text-slate-500 mt-1">Measures visual stability. Pages should maintain a CLS of 0.1 or less.</p>
+                    <div class="font-medium text-slate-700">{{ __('audit.cls') }} ({{ __('audit.cls_full') }})</div>
+                    <p class="text-slate-500 mt-1">{{ __('audit.cls_desc') }}</p>
                 </div>
             </div>
         </div>
@@ -170,14 +178,14 @@
     <div class="bg-slate-50 border-t border-slate-200 px-8 py-6">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
             <div class="flex items-center gap-2">
-                <span>Powered by</span>
+                <span>{{ __('audit.powered_by') }}</span>
                 <span class="font-semibold text-slate-700">{{ config('audits.brand_name') }}</span>
             </div>
             <div class="text-center">
-                Audit ID: <span class="font-mono text-xs bg-slate-200 px-2 py-1 rounded">{{ $audit->auditId }}</span>
+                {{ __('audit.audit_id') }}: <span class="font-mono text-xs bg-slate-200 px-2 py-1 rounded">{{ $audit->auditId }}</span>
             </div>
             <div class="text-slate-400">
-                Data from Google PageSpeed Insights
+                {{ __('audit.data_from') }}
             </div>
         </div>
     </div>

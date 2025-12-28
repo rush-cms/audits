@@ -20,13 +20,14 @@ final class GenerateAuditPdfJob implements ShouldQueue
 
     public function __construct(
         public readonly AuditData $auditData,
+        public readonly string $lang = 'en',
     ) {}
 
     public function handle(
         PdfGeneratorService $pdfGenerator,
         WebhookDispatcherService $webhookDispatcher,
     ): void {
-        $pdfPath = $pdfGenerator->generate($this->auditData);
+        $pdfPath = $pdfGenerator->generate($this->auditData, $this->lang);
         $pdfUrl = $pdfGenerator->getPublicUrl($pdfPath);
 
         $webhookDispatcher->dispatch($this->auditData, $pdfUrl);

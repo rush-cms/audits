@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 
 final class AuditController extends Controller
 {
+    private const array ALLOWED_LOCALES = ['en', 'pt_BR', 'es'];
+
     public function store(Request $request): JsonResponse
     {
         /** @var array<mixed> $payload */
@@ -21,13 +23,25 @@ final class AuditController extends Controller
             $payload = $payload[0];
         }
 
+        $lang = $this->validateLocale($request->input('lang', 'en'));
+
         $auditData = AuditData::fromPageSpeedPayload($payload);
 
-        GenerateAuditPdfJob::dispatch($auditData);
+        GenerateAuditPdfJob::dispatch($auditData, $lang);
 
         return response()->json([
             'message' => 'Audit queued',
             'audit_id' => $auditData->auditId,
+            'lang' => $lang,
         ], 202);
+    }
+
+    private function validateLocale(mixed $lang): string
+    {
+        if (is_string($lang) && in_array($lang, self::ALLOWED_LOCALES, true)) {
+            return $lang;
+        }
+
+        return 'en';
     }
 }
