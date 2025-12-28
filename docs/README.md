@@ -21,19 +21,7 @@ This microservice generates performance audit PDFs from Google PageSpeed Insight
 ## Architecture
 
 ```
-┌─────────────┐     ┌────────────────┐     ┌─────────────────┐
-│ POST /scan  │────▶│ AuditController │────▶│ GenerateAuditJob│
-└─────────────┘     └────────────────┘     └─────────────────┘
-                                                    │
-                                                    ▼
-                                           ┌─────────────────┐
-                                           │PdfGeneratorSvc  │
-                                           └─────────────────┘
-                                                    │
-                                                    ▼
-                                           ┌─────────────────┐
-                                           │WebhookDispatcher│
-                                           └─────────────────┘
+Post /scan ──▶ AuditController ──▶ GenerateAuditJob ──▶ PdfGeneratorSvc ──▶ WebhookDispatcher
 ```
 
 ## License

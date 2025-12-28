@@ -6,6 +6,8 @@ A standalone, headless microservice dedicated to generating high-fidelity perfor
 
 Ideally used with **n8n** or other automation tools to ingest PageSpeed API data and return professional client-ready PDFs.
 
+> **Documentation:** [docs/README.md](docs/README.md)
+
 ## Features
 
 * **Headless Architecture:** API-first design with no frontend UI
