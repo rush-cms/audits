@@ -6,6 +6,10 @@ return [
     'brand_name' => env('AUDITS_BRAND_NAME', 'Rush CMS'),
     'logo_url' => env('AUDITS_LOGO_URL', 'https://rushcms.com/assets/logo-dark.png'),
 
+    'pagespeed' => [
+        'api_key' => env('PAGESPEED_API_KEY'),
+    ],
+
     'webhook' => [
         'return_url' => env('AUDITS_WEBHOOK_RETURN_URL'),
         'timeout' => (int) env('AUDITS_WEBHOOK_TIMEOUT', 30),
