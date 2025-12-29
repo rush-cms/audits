@@ -84,6 +84,30 @@ Pruning complete. 2 file(s) deleted.
 
 ---
 
+## audits:cleanup-failed-jobs
+
+Remove old failed jobs from the dead letter queue.
+
+```bash
+php artisan audits:cleanup-failed-jobs
+```
+
+**Description:**
+Deletes failed job records older than the configured retention period (default: 30 days). This prevents the `failed_jobs` table from growing indefinitely.
+
+**Configuration:**
+- `AUDITS_FAILED_JOBS_RETENTION_DAYS` - Days to keep failed jobs (default: 30)
+
+**Example output:**
+```
+Deleted 5 failed job(s) older than 30 days.
+```
+
+**Recommendation:**
+Run this command regularly (e.g., weekly) via cron or scheduler to maintain database hygiene.
+
+---
+
 ## Scheduler
 
 The `audit:prune-pdfs` command runs daily automatically via Laravel Scheduler.

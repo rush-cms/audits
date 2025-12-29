@@ -174,7 +174,7 @@ When PDF generation completes, a POST request is sent to `AUDITS_WEBHOOK_RETURN_
 }
 ```
 
-**New Fields (Sprint 2):**
+**Additional Fields:**
 - `screenshotsIncluded` (boolean): Whether screenshots are present in the PDF
 - `screenshotError` (string|null): Error message if screenshots failed (only if `AUDITS_REQUIRE_SCREENSHOTS=false`)
 
