@@ -6,6 +6,10 @@ return [
     'score' => 'Puntuación de Rendimiento',
     'out_of' => 'de 100',
     'core_web_vitals' => 'Core Web Vitals',
+    'seo' => 'SEO',
+    'accessibility' => 'Accesibilidad',
+    'no_issues' => 'No se encontraron problemas',
+    'screenshot_unavailable' => 'Vista previa del sitio no disponible - el sitio puede tener restricciones de seguridad',
 
     'lcp' => 'LCP',
     'lcp_full' => 'Largest Contentful Paint',

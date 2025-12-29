@@ -19,11 +19,15 @@ final class AuditData extends Data
         public readonly MetricValue $fcp,
         public readonly MetricValue $cls,
         public readonly string $auditId,
+        public readonly ?SeoData $seo = null,
+        public readonly ?AccessibilityData $accessibility = null,
+        public readonly ?string $desktopScreenshot = null,
+        public readonly ?string $mobileScreenshot = null,
+        public readonly bool $screenshotFailed = false,
+        public readonly ?string $screenshotError = null,
     ) {}
 
     /**
-     * Create from lighthouseResult object (the nested object, not full PageSpeed response).
-     *
      * @param  array<string, mixed>  $lighthouseResult
      */
     public static function fromLighthouseResult(array $lighthouseResult): self
@@ -53,6 +57,8 @@ final class AuditData extends Data
             fcp: MetricValue::fromDisplayValue((string) $fcpAudit['displayValue']),
             cls: MetricValue::fromDisplayValue((string) $clsAudit['displayValue']),
             auditId: (string) Str::uuid(),
+            seo: SeoData::fromLighthouseResult($lighthouseResult),
+            accessibility: AccessibilityData::fromLighthouseResult($lighthouseResult),
         );
     }
 }

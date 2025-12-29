@@ -19,8 +19,12 @@
                         stroke-dasharray="{{ $audit->score->toPercentage() }}, 100"/>
                 </svg>
                 <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-5xl font-bold text-slate-900">{{ $audit->score->toPercentage() }}</span>
-                    <span class="text-slate-500 text-sm">{{ __('audit.out_of') }}</span>
+                    <span class="text-5xl font-bold text-slate-900">
+                        {{ $audit->score->toPercentage() }}
+                    </span>
+                    <span class="text-slate-500 text-sm">
+                        {{ __('audit.out_of') }}
+                    </span>
                 </div>
             </div>
             <div class="mt-4">
@@ -29,11 +33,19 @@
                     :note="$audit->score->toPercentage()"
                 />
             </div>
+
+            <x-device-mockup
+                :desktopScreenshot="$audit->desktopScreenshot"
+                :mobileScreenshot="$audit->mobileScreenshot"
+                :screenshotFailed="$audit->screenshotFailed"
+            />
         </div>
     </div>
 
     <div class="px-4 lg:px-8">
-        <h3 class="text-lg font-semibold text-slate-900 mb-4">{{ __('audit.core_web_vitals') }}</h3>
+        <x-section-title>
+            {{ __('audit.core_web_vitals') }}
+        </x-section-title>
 
         <div class="grid grid-cols-1 gap-2 lg:gap-4">
             <div class="grid grid-cols-2 gap-2 lg:gap-4">
@@ -42,7 +54,10 @@
                     :value="$audit->lcp->format()"
                     :metric="$audit->lcp"
                 />
-                <x-core-web-vitals-message type="lcp" :metric="$audit->lcp" />
+                <x-core-web-vitals-message
+                    type="lcp"
+                    :metric="$audit->lcp"
+                />
             </div>
             <div class="grid grid-cols-2 gap-2 lg:gap-4">
                 <x-core-web-vitals-card
@@ -50,7 +65,10 @@
                     :value="$audit->fcp->format()"
                     :metric="$audit->fcp"
                 />
-                <x-core-web-vitals-message type="fcp" :metric="$audit->fcp" />
+                <x-core-web-vitals-message
+                    type="fcp"
+                    :metric="$audit->fcp"
+                />
             </div>
             <div class="grid grid-cols-2 gap-2 lg:gap-4">
                 <x-core-web-vitals-card
@@ -58,35 +76,37 @@
                     :value="$audit->cls->format()"
                     :metric="$audit->cls"
                 />
-                <x-core-web-vitals-message type="cls" :metric="$audit->cls" />
+                <x-core-web-vitals-message
+                    type="cls"
+                    :metric="$audit->cls"
+                />
             </div>
         </div>
     </div>
 
-    <div class="px-4 lg:px-8">
-        <div class="bg-blue-50 rounded-xl border border-blue-100 p-4">
-            <h3 class="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                {{ __('audit.what_means') }}
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div>
-                    <div class="font-medium text-slate-700">{{ __('audit.lcp') }} ({{ __('audit.lcp_full') }})</div>
-                    <p class="text-slate-500 mt-1">{{ __('audit.lcp_desc') }}</p>
-                </div>
-                <div>
-                    <div class="font-medium text-slate-700">{{ __('audit.fcp') }} ({{ __('audit.fcp_full') }})</div>
-                    <p class="text-slate-500 mt-1">{{ __('audit.fcp_desc') }}</p>
-                </div>
-                <div>
-                    <div class="font-medium text-slate-700">{{ __('audit.cls') }} ({{ __('audit.cls_full') }})</div>
-                    <p class="text-slate-500 mt-1">{{ __('audit.cls_desc') }}</p>
-                </div>
-            </div>
+    @if($audit->seo)
+        <div class="px-4 lg:px-8">
+            <x-section-title>
+                {{ __('audit.seo') }}
+            </x-section-title>
+            <x-audit-section
+                :score="$audit->seo->score"
+                :failedAudits="$audit->seo->failedAudits"
+            />
         </div>
-    </div>
+    @endif
+
+    @if($audit->accessibility)
+        <div class="px-4 lg:px-8">
+            <x-section-title>
+                {{ __('audit.accessibility') }}
+            </x-section-title>
+            <x-audit-section
+                :score="$audit->accessibility->score"
+                :failedAudits="$audit->accessibility->failedAudits"
+            />
+        </div>
+    @endif
 </div>
 
 <x-partials.footer :auditId="$audit->auditId" />

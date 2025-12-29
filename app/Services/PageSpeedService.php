@@ -15,18 +15,19 @@ final class PageSpeedService
      */
     public function fetchLighthouseResult(string $url, string $strategy = 'mobile'): array
     {
-        $params = [
+        $queryParams = http_build_query([
             'url' => $url,
             'strategy' => $strategy,
-            'category' => 'performance',
-        ];
+        ]);
+
+        $queryParams .= '&category=performance&category=seo&category=accessibility';
 
         $apiKey = config('audits.pagespeed.api_key');
         if ($apiKey) {
-            $params['key'] = $apiKey;
+            $queryParams .= '&key='.$apiKey;
         }
 
-        $response = Http::timeout(60)->get(self::API_URL, $params);
+        $response = Http::timeout(60)->get(self::API_URL.'?'.$queryParams);
 
         $response->throw();
 

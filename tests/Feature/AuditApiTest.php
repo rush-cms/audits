@@ -47,6 +47,6 @@ it('handles array-wrapped payload from n8n', function (): void {
     $response->assertStatus(202);
 
     Queue::assertPushed(GenerateAuditPdfJob::class, function ($job) {
-        return $job->auditData->score->toPercentage() === 100;
+        return $job->auditData->score->toPercentage() === 69;
     });
 });

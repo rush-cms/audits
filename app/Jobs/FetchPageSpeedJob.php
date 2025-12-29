@@ -29,6 +29,6 @@ final class FetchPageSpeedJob implements ShouldQueue
 
         $auditData = AuditData::fromLighthouseResult($lighthouseResult);
 
-        GenerateAuditPdfJob::dispatch($auditData, $this->lang);
+        TakeScreenshotsJob::dispatch($auditData, $this->lang);
     }
 }

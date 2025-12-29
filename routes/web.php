@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Data\AccessibilityData;
 use App\Data\AuditData;
+use App\Data\SeoData;
 use App\ValueObjects\AuditScore;
 use App\ValueObjects\MetricValue;
 use App\ValueObjects\Url;
@@ -70,6 +72,9 @@ Route::get('/preview/audit', function (Request $request) {
     $fcp = $parseMetric($request->query('fcp'), 0.3, 3.5, 's');
     $cls = $parseCls($request->query('cls'));
 
+    $seoScore = rand(70, 100) / 100;
+    $accessibilityScore = rand(75, 100) / 100;
+
     $audit = new AuditData(
         targetUrl: new Url('https://www.example.com/'),
         score: new AuditScore($score),
@@ -77,6 +82,20 @@ Route::get('/preview/audit', function (Request $request) {
         fcp: MetricValue::fromDisplayValue($fcp),
         cls: MetricValue::fromDisplayValue($cls),
         auditId: 'preview-'.now()->timestamp,
+        seo: new SeoData(
+            score: new AuditScore($seoScore),
+            failedAudits: $seoScore < 0.9 ? [
+                ['id' => 'robots-txt', 'title' => 'robots.txt is not valid', 'description' => ''],
+            ] : [],
+        ),
+        accessibility: new AccessibilityData(
+            score: new AuditScore($accessibilityScore),
+            failedAudits: $accessibilityScore < 0.95 ? [
+                ['id' => 'link-name', 'title' => 'Links do not have a discernible name', 'description' => ''],
+            ] : [],
+        ),
+        desktopScreenshot: 'https://placehold.co/600x400/1e293b/94a3b8?text=Desktop+Preview',
+        mobileScreenshot: 'https://placehold.co/300x600/1e293b/94a3b8?text=Mobile',
     );
 
     return view('reports.audit-preview', [
