@@ -27,11 +27,15 @@ Ideally used with **n8n** or other automation tools to ingest PageSpeed API data
 * **Webhook Callbacks:** Receive a ping with the PDF URL as soon as it's ready
 * **Webhook Signatures:** HMAC-SHA256 signatures for webhook authenticity verification
 * **Audit Persistence:** All audits stored in database with status tracking (pending, processing, completed, failed)
-* **Idempotency Support:** Prevents duplicate audits within configurable time windows
+* **State-Based Idempotency:** Smart idempotency based on audit status, not time windows
+* **Graceful Degradation:** PDF generation continues even if screenshots fail (configurable)
+* **Partial Data Persistence:** PageSpeed data preserved even if pipeline fails midway
+* **Dead Letter Queue:** Failed jobs tracked with auto-cleanup after configurable retention period
 * **Smart Pruning:** Auto-cleanup of old PDF files to save storage
 * **Token Authentication:** Built-in console commands to manage API clients
 * **Rate Limiting:** Configurable per-token and global rate limits with Redis
 * **SSRF Protection:** Blocks private networks and localhost in production
+* **Race Condition Handling:** Optimistic locking with exponential backoff for concurrent requests
 * **Multi-language Support:** English, Portuguese (BR), and Spanish
 * **Screenshot Capture:** Automatic desktop & mobile screenshots with device mockup frames
 * **SEO & Accessibility Audits:** Optional sections with detailed issue reports
@@ -48,12 +52,12 @@ Ideally used with **n8n** or other automation tools to ingest PageSpeed API data
 ## Workflow
 
 1. **Ingestion:** Send a URL to `POST /api/v1/scan`
-2. **Idempotency Check:** Returns existing audit if duplicate within time window
+2. **State-Based Idempotency:** Returns existing audit based on status (pending/processing = reuse, completed = new scan allowed, failed recent = retry window)
 3. **Database Persistence:** Creates audit record with status `pending`
-4. **PageSpeed Fetch:** Fetches Performance, SEO & Accessibility data, marks audit as `processing`
-5. **Screenshot Capture:** Takes desktop (1920x1080) and mobile (375x812) screenshots
+4. **PageSpeed Fetch:** Fetches Performance, SEO & Accessibility data, saves to `pagespeed_data`, marks audit as `processing`
+5. **Screenshot Capture:** Takes desktop (1920x1080) and mobile (375x812) screenshots, saves to `screenshots_data`
 6. **Image Optimization:** Converts screenshots to WebP (600px width)
-7. **PDF Generation:** Renders Blade views with Tailwind CSS, converts to PDF
+7. **PDF Generation:** Renders Blade views with Tailwind CSS, converts to PDF (continues even if screenshots fail)
 8. **Status Update:** Marks audit as `completed` with score, metrics, and PDF path
 9. **Callback:** Sends POST request to your webhook URL with the PDF link and metadata
 
@@ -74,6 +78,11 @@ AUDITS_WEBHOOK_RETURN_URL="https://your-main-app.com/api/webhook/audit-ready"
 AUDITS_CONCURRENCY=1
 AUDITS_RETENTION_DAYS=7
 AUDITS_IDEMPOTENCY_WINDOW=60
+AUDITS_FAILED_RETRY_AFTER=300
+AUDITS_REQUIRE_SCREENSHOTS=false
+AUDITS_FAILED_JOBS_RETENTION_DAYS=30
+AUDITS_JOB_MAX_ATTEMPTS=3
+AUDITS_JOB_BACKOFF_BASE=30
 
 # Branding (Whitelabel)
 AUDITS_BRAND_NAME="Rush CMS"
@@ -106,7 +115,12 @@ BROWSERSHOT_CHROME_PATH="/usr/bin/google-chrome"
 | `AUDITS_SHOW_ACCESSIBILITY` | `false` | Show Accessibility section |
 | `AUDITS_CTA_URL` | WhatsApp link | Call-to-action button URL |
 | `AUDITS_RETENTION_DAYS` | `7` | Days to keep PDF files before pruning |
-| `AUDITS_IDEMPOTENCY_WINDOW` | `60` | Minutes to prevent duplicate audits |
+| `AUDITS_IDEMPOTENCY_WINDOW` | `60` | Minutes to prevent duplicate audits (legacy) |
+| `AUDITS_FAILED_RETRY_AFTER` | `300` | Seconds before failed audit allows retry (5 min) |
+| `AUDITS_REQUIRE_SCREENSHOTS` | `false` | Fail audit if screenshots fail (true) or continue (false) |
+| `AUDITS_FAILED_JOBS_RETENTION_DAYS` | `30` | Days to keep failed jobs before cleanup |
+| `AUDITS_JOB_MAX_ATTEMPTS` | `3` | Maximum retry attempts for failed jobs |
+| `AUDITS_JOB_BACKOFF_BASE` | `30` | Base delay in seconds for job retry backoff |
 | `AUDITS_WEBHOOK_TIMEOUT` | `30` | Webhook timeout in seconds |
 | `AUDITS_WEBHOOK_SECRET` | `null` | Secret for webhook HMAC signatures |
 | `AUDITS_RATE_LIMIT_PER_MINUTE` | `60` | Requests per minute per token |
@@ -263,7 +277,10 @@ Subdomains are automatically matched (e.g., `example.com` blocks `www.example.co
 }
 ```
 
-**Note:** Duplicate requests within the idempotency window return the same `audit_id` without triggering new processing.
+**Note:** Idempotency is now state-based:
+- **Pending/Processing audits:** Returns existing audit_id
+- **Completed audits:** Creates new audit (allows immediate re-scan)
+- **Failed audits:** Returns existing if recent (< 5min), creates new if old
 
 ### Get Audit Status
 
@@ -319,6 +336,9 @@ php artisan test:pdf --lang=pt_BR
 
 # Prune old PDFs
 php artisan audit:prune-pdfs
+
+# Cleanup old failed jobs
+php artisan audits:cleanup-failed-jobs
 
 # Check browser setup
 php artisan audit:check-browser

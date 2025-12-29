@@ -47,13 +47,24 @@ Submit a URL for PageSpeed analysis and PDF generation.
 4. **Generate PDF** - Creates report with device mockups and metrics
 5. **Webhook Callback** - Sends notification with PDF URL (if configured)
 
-### Idempotency
+### State-Based Idempotency
 
-The API implements automatic idempotency to prevent duplicate audits:
+The API implements smart state-based idempotency to prevent unnecessary duplicate audits:
 
-- Duplicate requests for the same URL and strategy within a time window (default: 60 minutes) return the same `audit_id`
-- No additional processing is triggered for duplicate requests
-- Idempotency window is configurable via `AUDITS_IDEMPOTENCY_WINDOW` (in minutes)
+**Behavior by Audit Status:**
+- **Pending/Processing:** Returns existing `audit_id` (audit still in progress)
+- **Completed:** Creates **new** audit (allows immediate re-scan of updated sites)
+- **Failed (recent):** Returns existing `audit_id` if failed < 5 minutes ago (retry window)
+- **Failed (old):** Creates **new** audit if failed >= 5 minutes ago (allows retry)
+
+**Configuration:**
+- `AUDITS_FAILED_RETRY_AFTER=300` - Seconds before failed audit allows new attempt (default: 5 min)
+
+**Why State-Based?**
+- No clock skew issues between servers
+- Clients can re-scan completed audits immediately
+- Failed audits have smart retry window
+- No arbitrary time windows blocking legitimate requests
 
 ### Response
 
@@ -157,9 +168,17 @@ When PDF generation completes, a POST request is sent to `AUDITS_WEBHOOK_RETURN_
     "cls": "0.05"
   },
   "strategy": "mobile",
-  "lang": "pt_BR"
+  "lang": "pt_BR",
+  "screenshotsIncluded": true,
+  "screenshotError": null
 }
 ```
+
+**New Fields (Sprint 2):**
+- `screenshotsIncluded` (boolean): Whether screenshots are present in the PDF
+- `screenshotError` (string|null): Error message if screenshots failed (only if `AUDITS_REQUIRE_SCREENSHOTS=false`)
+
+**Note:** When `AUDITS_REQUIRE_SCREENSHOTS=false` (default), the PDF is generated even if screenshots fail. The webhook will include `screenshotsIncluded: false` and a descriptive error message.
 
 ### Webhook Configuration
 
