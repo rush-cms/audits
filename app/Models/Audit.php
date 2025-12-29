@@ -7,6 +7,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property string $id
+ * @property string $idempotency_key
+ * @property string $url
+ * @property string $strategy
+ * @property string $lang
+ * @property string $status
+ * @property int|null $score
+ * @property array<string, string>|null $metrics
+ * @property string|null $pdf_path
+ * @property string|null $error_message
+ * @property \Illuminate\Support\Carbon|null $completed_at
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ */
 final class Audit extends Model
 {
     use HasUuids;

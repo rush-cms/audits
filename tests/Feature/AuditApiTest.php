@@ -160,6 +160,7 @@ it('retrieves audit by id', function (): void {
     $token = $user->createToken('test')->plainTextToken;
 
     $audit = Audit::create([
+        'idempotency_key' => Audit::generateIdempotencyKey('https://example.com', 'mobile'),
         'url' => 'https://example.com',
         'strategy' => 'mobile',
         'lang' => 'en',

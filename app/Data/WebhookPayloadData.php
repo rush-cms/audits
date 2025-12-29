@@ -22,6 +22,9 @@ final class WebhookPayloadData extends Data
 
     public static function fromAudit(Audit $audit, string $pdfUrl): self
     {
+        /** @var array<string, string> $metrics */
+        $metrics = $audit->metrics ?? [];
+
         return new self(
             auditId: $audit->id,
             status: $audit->status,
@@ -29,9 +32,9 @@ final class WebhookPayloadData extends Data
             pdfUrl: $pdfUrl,
             score: $audit->score ?? 0,
             metrics: new WebhookMetricsData(
-                lcp: $audit->metrics['lcp'] ?? 'N/A',
-                fcp: $audit->metrics['fcp'] ?? 'N/A',
-                cls: $audit->metrics['cls'] ?? 'N/A',
+                lcp: $metrics['lcp'] ?? 'N/A',
+                fcp: $metrics['fcp'] ?? 'N/A',
+                cls: $metrics['cls'] ?? 'N/A',
             ),
             strategy: $audit->strategy,
             lang: $audit->lang,

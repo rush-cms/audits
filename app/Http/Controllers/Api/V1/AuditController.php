@@ -61,7 +61,7 @@ final class AuditController extends Controller
             'metrics' => $audit->metrics,
             'pdf_url' => $audit->pdf_url,
             'error_message' => $audit->error_message,
-            'created_at' => $audit->created_at?->toIso8601String(),
+            'created_at' => $audit->created_at->toIso8601String(),
             'completed_at' => $audit->completed_at?->toIso8601String(),
         ]);
     }

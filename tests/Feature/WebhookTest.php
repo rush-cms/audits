@@ -14,6 +14,7 @@ it('dispatches webhook with correct payload including strategy and lang', functi
     config(['audits.webhook.return_url' => 'https://example.com/webhook']);
 
     $audit = Audit::create([
+        'idempotency_key' => Audit::generateIdempotencyKey('https://example.com', 'mobile'),
         'url' => 'https://example.com',
         'strategy' => 'mobile',
         'lang' => 'pt_BR',
@@ -49,6 +50,7 @@ it('does not dispatch webhook when url is empty', function (): void {
     config(['audits.webhook.return_url' => null]);
 
     $audit = Audit::create([
+        'idempotency_key' => Audit::generateIdempotencyKey('https://example.com', 'mobile'),
         'url' => 'https://example.com',
         'strategy' => 'mobile',
         'lang' => 'en',
