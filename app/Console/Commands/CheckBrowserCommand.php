@@ -45,7 +45,7 @@ final class CheckBrowserCommand extends Command
 
             return self::FAILURE;
         } catch (\Throwable $e) {
-            $this->error('✗ Browsershot failed: ' . $e->getMessage());
+            $this->error('✗ Browsershot failed: '.$e->getMessage());
 
             return self::FAILURE;
         }

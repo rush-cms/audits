@@ -11,6 +11,12 @@ curl -X POST https://audits.yoursite.com/api/v1/scan \
   -d '{"url": "https://example.com", "lang": "pt_BR"}'
 ```
 
+You can get a token by running the following command:
+
+```bash
+php artisan audit:create-token "My Token"
+```
+
 ---
 
 ## POST /api/v1/scan
