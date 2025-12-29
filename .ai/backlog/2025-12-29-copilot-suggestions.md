@@ -7,10 +7,10 @@ This document provides suggestions for future improvements to the Rush CMS Audit
 ### Sprint 1: OSS Governance and Contribution Guidelines
 **Objective:** Improve the open-source appeal and organization.
 
-- [ ] Implement a clear `CONTRIBUTING.md` file.
-- [ ] Add a `CODE_OF_CONDUCT.md`.
-- [ ] Create GitHub issue and PR templates.
-- [ ] Establish clear development guidelines (including coding standards).
+- [x] Implement a clear `CONTRIBUTING.md` file.
+- [x] Add a `CODE_OF_CONDUCT.md`. (Skipped)
+- [x] Create GitHub issue and PR templates.
+- [x] Establish clear development guidelines (including coding standards).
 
 **Estimated Effort:** 4 hours  
 **Expected Outcome:** Improved community contributions, professional OSS setup.
