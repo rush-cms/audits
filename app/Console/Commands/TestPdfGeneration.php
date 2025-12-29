@@ -48,7 +48,7 @@ class TestPdfGeneration extends Command
             mobileScreenshot: 'https://placehold.co/300x600/1e293b/94a3b8?text=Mobile',
         );
 
-        $lang = $this->option('lang');
+        $lang = (string) $this->option('lang');
         $path = $pdfService->generate($auditData, $lang);
 
         $this->info('PDF generated: '.$pdfService->getPublicUrl($path));
