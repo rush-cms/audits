@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property string $id
@@ -151,6 +152,11 @@ final class Audit extends Model
         }
 
         return asset('storage/reports/'.basename($this->pdf_path));
+    }
+
+    public function webhookDeliveries(): HasMany
+    {
+        return $this->hasMany(WebhookDelivery::class);
     }
 
     public static function generateIdempotencyKey(string $url, string $strategy): string
