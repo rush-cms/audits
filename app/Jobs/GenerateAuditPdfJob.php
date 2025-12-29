@@ -8,7 +8,6 @@ use App\Data\AuditData;
 use App\Exceptions\PdfGenerationException;
 use App\Models\Audit;
 use App\Services\PdfGeneratorService;
-use App\Services\WebhookDispatcherService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Middleware\RateLimited;
@@ -42,7 +41,6 @@ final class GenerateAuditPdfJob implements ShouldQueue
 
     public function handle(
         PdfGeneratorService $pdfGenerator,
-        WebhookDispatcherService $webhookDispatcher,
     ): void {
         $startTime = microtime(true);
         $audit = Audit::findOrFail($this->auditId);
@@ -77,7 +75,7 @@ final class GenerateAuditPdfJob implements ShouldQueue
                 'duration_ms' => $duration,
             ]);
 
-            $webhookDispatcher->dispatch($audit, $pdfUrl);
+            DispatchWebhookJob::dispatch($this->auditId, $pdfUrl);
         } catch (Throwable $e) {
             $duration = round((microtime(true) - $startTime) * 1000);
 

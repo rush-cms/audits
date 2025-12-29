@@ -21,8 +21,10 @@ return [
 
     'webhook' => [
         'return_url' => env('AUDITS_WEBHOOK_RETURN_URL'),
-        'timeout' => (int) env('AUDITS_WEBHOOK_TIMEOUT', 30),
+        'timeout' => (int) env('AUDITS_WEBHOOK_TIMEOUT', 5),
+        'connect_timeout' => (int) env('AUDITS_WEBHOOK_CONNECT_TIMEOUT', 2),
         'secret' => env('AUDITS_WEBHOOK_SECRET'),
+        'max_attempts' => (int) env('AUDITS_WEBHOOK_MAX_ATTEMPTS', 5),
     ],
 
     'pdf' => [

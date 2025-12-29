@@ -7,7 +7,9 @@ namespace App\Services;
 use App\Data\WebhookPayloadData;
 use App\Exceptions\WebhookDeliveryException;
 use App\Models\Audit;
+use App\Models\WebhookDelivery;
 use App\Support\WebhookSignature;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -18,7 +20,7 @@ final class WebhookDispatcherService
         private readonly WebhookSignature $signature = new WebhookSignature
     ) {}
 
-    public function dispatch(Audit $audit, string $pdfUrl): void
+    public function dispatch(Audit $audit, string $pdfUrl, int $currentAttempt = 1): void
     {
         $webhookUrl = config('audits.webhook.return_url');
 
@@ -31,12 +33,13 @@ final class WebhookDispatcherService
         }
 
         $startTime = microtime(true);
-        $attempts = ($audit->webhook_attempts ?? 0) + 1;
+        $maxAttempts = config('audits.webhook.max_attempts', 5);
 
         Log::channel('webhooks')->info('Dispatching webhook', [
             'audit_id' => $audit->id,
             'webhook_url' => $webhookUrl,
-            'attempt' => $attempts,
+            'attempt' => $currentAttempt,
+            'max_attempts' => $maxAttempts,
         ]);
 
         $payload = WebhookPayloadData::fromAudit($audit, $pdfUrl);
@@ -50,62 +53,185 @@ final class WebhookDispatcherService
             return;
         }
 
+        $responseStatus = null;
+        $responseBody = null;
+        $errorMessage = null;
+
         try {
             $headers = $this->signature->generateHeaders($payloadJson);
+            $headers['X-Webhook-Attempt'] = (string) $currentAttempt;
+            $headers['X-Webhook-Max-Attempts'] = (string) $maxAttempts;
 
-            $response = Http::timeout(config('audits.webhook.timeout'))
+            $response = Http::timeout(config('audits.webhook.timeout', 5))
+                ->connectTimeout(config('audits.webhook.connect_timeout', 2))
                 ->withHeaders($headers)
                 ->post($webhookUrl, $payload->toArray());
 
             $duration = round((microtime(true) - $startTime) * 1000);
+            $responseStatus = $response->status();
+            $responseBody = $response->body();
+
+            $this->recordDelivery(
+                audit: $audit,
+                attemptNumber: $currentAttempt,
+                url: $webhookUrl,
+                payload: $payload->toArray(),
+                responseStatus: $responseStatus,
+                responseBody: $responseBody,
+                responseTimeMs: (int) $duration,
+                delivered: $response->successful()
+            );
 
             $audit->update([
-                'webhook_delivered_at' => now(),
-                'webhook_status' => $response->status(),
-                'webhook_attempts' => $attempts,
+                'webhook_attempts' => $currentAttempt,
             ]);
 
             if ($response->successful()) {
+                $audit->update([
+                    'webhook_delivered_at' => now(),
+                    'webhook_status' => $responseStatus,
+                ]);
+
                 Log::channel('webhooks')->info('Webhook delivered successfully', [
                     'audit_id' => $audit->id,
-                    'status' => $response->status(),
+                    'status' => $responseStatus,
                     'duration_ms' => $duration,
-                    'response_body' => $response->body(),
                 ]);
-            } else {
-                Log::channel('webhooks')->warning('Webhook returned non-2xx status', [
-                    'audit_id' => $audit->id,
-                    'status' => $response->status(),
-                    'duration_ms' => $duration,
-                    'response_body' => $response->body(),
-                ]);
+
+                return;
             }
-        } catch (Throwable $e) {
+
+            if ($response->clientError()) {
+                Log::channel('webhooks')->error('Webhook rejected by client (4xx)', [
+                    'audit_id' => $audit->id,
+                    'status' => $responseStatus,
+                    'duration_ms' => $duration,
+                    'response_body' => $responseBody,
+                ]);
+
+                $this->fail();
+
+                return;
+            }
+
+            if ($response->serverError()) {
+                Log::channel('webhooks')->warning('Webhook server error (5xx), will retry', [
+                    'audit_id' => $audit->id,
+                    'status' => $responseStatus,
+                    'duration_ms' => $duration,
+                    'response_body' => $responseBody,
+                ]);
+
+                throw new WebhookDeliveryException(
+                    "Server error {$responseStatus}",
+                    context: [
+                        'audit_id' => $audit->id,
+                        'status' => $responseStatus,
+                        'response_body' => $responseBody,
+                    ]
+                );
+            }
+        } catch (ConnectionException $e) {
             $duration = round((microtime(true) - $startTime) * 1000);
+            $errorMessage = $e->getMessage();
+
+            $this->recordDelivery(
+                audit: $audit,
+                attemptNumber: $currentAttempt,
+                url: $webhookUrl,
+                payload: $payload->toArray(),
+                responseTimeMs: (int) $duration,
+                errorMessage: $errorMessage,
+                delivered: false
+            );
 
             $audit->update([
-                'webhook_attempts' => $attempts,
+                'webhook_attempts' => $currentAttempt,
+            ]);
+
+            Log::channel('webhooks')->error('Webhook connection failed', [
+                'audit_id' => $audit->id,
+                'webhook_url' => $webhookUrl,
+                'error' => $errorMessage,
+                'duration_ms' => $duration,
+                'attempt' => $currentAttempt,
+            ]);
+
+            throw new WebhookDeliveryException(
+                "Connection failed: {$errorMessage}",
+                context: [
+                    'audit_id' => $audit->id,
+                    'webhook_url' => $webhookUrl,
+                    'duration_ms' => $duration,
+                    'attempts' => $currentAttempt,
+                ],
+                previous: $e
+            );
+        } catch (Throwable $e) {
+            $duration = round((microtime(true) - $startTime) * 1000);
+            $errorMessage = $e->getMessage();
+
+            $this->recordDelivery(
+                audit: $audit,
+                attemptNumber: $currentAttempt,
+                url: $webhookUrl,
+                payload: $payload->toArray(),
+                responseTimeMs: (int) $duration,
+                errorMessage: $errorMessage,
+                delivered: false
+            );
+
+            $audit->update([
+                'webhook_attempts' => $currentAttempt,
             ]);
 
             Log::channel('webhooks')->error('Webhook delivery failed', [
                 'audit_id' => $audit->id,
                 'webhook_url' => $webhookUrl,
-                'error' => $e->getMessage(),
+                'error' => $errorMessage,
                 'duration_ms' => $duration,
-                'attempt' => $attempts,
+                'attempt' => $currentAttempt,
             ]);
 
             throw new WebhookDeliveryException(
-                "Failed to deliver webhook for audit {$audit->id}: {$e->getMessage()}",
+                "Failed to deliver webhook: {$errorMessage}",
                 context: [
                     'audit_id' => $audit->id,
                     'webhook_url' => $webhookUrl,
                     'duration_ms' => $duration,
-                    'attempts' => $attempts,
-                    'original_error' => $e->getMessage(),
+                    'attempts' => $currentAttempt,
+                    'original_error' => $errorMessage,
                 ],
                 previous: $e
             );
         }
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function recordDelivery(
+        Audit $audit,
+        int $attemptNumber,
+        string $url,
+        array $payload,
+        ?int $responseStatus = null,
+        ?string $responseBody = null,
+        ?int $responseTimeMs = null,
+        ?string $errorMessage = null,
+        bool $delivered = false
+    ): void {
+        WebhookDelivery::create([
+            'audit_id' => $audit->id,
+            'attempt_number' => $attemptNumber,
+            'url' => $url,
+            'payload' => $payload,
+            'response_status' => $responseStatus,
+            'response_body' => $responseBody,
+            'response_time_ms' => $responseTimeMs,
+            'error_message' => $errorMessage,
+            'delivered_at' => $delivered ? now() : null,
+            'created_at' => now(),
+        ]);
     }
 }
