@@ -6,6 +6,4 @@ namespace App\Exceptions;
 
 use InvalidArgumentException;
 
-final class PrivateNetworkException extends InvalidArgumentException
-{
-}
+final class PrivateNetworkException extends InvalidArgumentException {}

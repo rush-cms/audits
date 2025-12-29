@@ -6,6 +6,4 @@ namespace App\Exceptions;
 
 use InvalidArgumentException;
 
-final class BlockedDomainException extends InvalidArgumentException
-{
-}
+final class BlockedDomainException extends InvalidArgumentException {}

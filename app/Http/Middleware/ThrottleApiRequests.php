@@ -8,7 +8,6 @@ use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\RateLimiter;
 use Symfony\Component\HttpFoundation\Response;
 
 final class ThrottleApiRequests
@@ -21,8 +20,7 @@ final class ThrottleApiRequests
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
-        $token = $user->currentAccessToken();
-        $tokenId = $token !== null ? (string) $token->id : 'unknown';
+        $tokenId = (string) ($user->currentAccessToken()?->id ?? 'unknown');
         $tokenKey = "token:{$tokenId}";
 
         $globalExceeded = $this->checkGlobalRateLimit();

@@ -19,7 +19,7 @@ parameters:
 			path: app/Casts/SafeUrlCast.php
 
 		-
-			message: '#^Strict comparison using \!\=\= between Laravel\\Sanctum\\PersonalAccessToken and null will always evaluate to true\.$#'
-			identifier: notIdentical.alwaysTrue
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
 			count: 1
 			path: app/Http/Middleware/ThrottleApiRequests.php

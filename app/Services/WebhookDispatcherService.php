@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Http;
 final class WebhookDispatcherService
 {
     public function __construct(
-        private readonly WebhookSignature $signature = new WebhookSignature()
+        private readonly WebhookSignature $signature = new WebhookSignature
     ) {}
 
     public function dispatch(Audit $audit, string $pdfUrl): void
