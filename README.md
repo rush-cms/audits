@@ -109,7 +109,6 @@ BROWSERSHOT_CHROME_PATH="/usr/bin/google-chrome"
 | `AUDITS_IDEMPOTENCY_WINDOW` | `60` | Minutes to prevent duplicate audits |
 | `AUDITS_WEBHOOK_TIMEOUT` | `30` | Webhook timeout in seconds |
 | `AUDITS_WEBHOOK_SECRET` | `null` | Secret for webhook HMAC signatures |
-| `AUDITS_BLOCKED_DOMAINS` | `null` | Comma-separated blocked domains |
 | `AUDITS_RATE_LIMIT_PER_MINUTE` | `60` | Requests per minute per token |
 | `AUDITS_RATE_LIMIT_PER_HOUR` | `500` | Requests per hour per token |
 | `AUDITS_RATE_LIMIT_PER_DAY` | `2000` | Requests per day per token |
@@ -208,7 +207,7 @@ In production (`APP_ENV=production`), the service automatically blocks:
 - Private IP ranges (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`)
 - Localhost (`127.0.0.1`, `::1`, `localhost`)
 - Link-local addresses (`169.254.0.0/16` - AWS metadata, etc.)
-- Custom blocked domains (via `AUDITS_BLOCKED_DOMAINS`)
+- Custom blocked domains (via `config/blocked-domains.php`)
 
 **Example blocked URLs in production:**
 ```
@@ -219,6 +218,19 @@ https://example.com                   ✅ Allowed
 ```
 
 In local/development (`APP_ENV=local`), SSRF protection is **disabled** to allow testing against local services.
+
+**Blocking Custom Domains:**
+
+Edit `config/blocked-domains.php` to add domains:
+```php
+return [
+    'internal.company.com',
+    'staging.myapp.com',
+    'localhost.example.com',
+];
+```
+
+Subdomains are automatically matched (e.g., `example.com` blocks `www.example.com`).
 
 ### Submit Scan
 

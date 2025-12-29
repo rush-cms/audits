@@ -36,7 +36,7 @@ return [
     ],
 
     'security' => [
-        'blocked_domains' => array_filter(explode(',', env('AUDITS_BLOCKED_DOMAINS', ''))),
+        'blocked_domains' => require config_path('blocked-domains.php'),
     ],
 
     'rate_limit' => [
