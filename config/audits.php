@@ -20,6 +20,7 @@ return [
     'webhook' => [
         'return_url' => env('AUDITS_WEBHOOK_RETURN_URL'),
         'timeout' => (int) env('AUDITS_WEBHOOK_TIMEOUT', 30),
+        'secret' => env('AUDITS_WEBHOOK_SECRET'),
     ],
 
     'pdf' => [
@@ -32,5 +33,16 @@ return [
         'node_binary' => env('BROWSERSHOT_NODE_BINARY', '/usr/bin/node'),
         'npm_binary' => env('BROWSERSHOT_NPM_BINARY', '/usr/bin/npm'),
         'chrome_path' => env('BROWSERSHOT_CHROME_PATH', '/usr/bin/google-chrome'),
+    ],
+
+    'security' => [
+        'blocked_domains' => array_filter(explode(',', env('AUDITS_BLOCKED_DOMAINS', ''))),
+    ],
+
+    'rate_limit' => [
+        'per_minute' => (int) env('AUDITS_RATE_LIMIT_PER_MINUTE', 60),
+        'per_hour' => (int) env('AUDITS_RATE_LIMIT_PER_HOUR', 500),
+        'per_day' => (int) env('AUDITS_RATE_LIMIT_PER_DAY', 2000),
+        'global_per_minute' => (int) env('AUDITS_RATE_LIMIT_GLOBAL_PER_MINUTE', 200),
     ],
 ];

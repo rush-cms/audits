@@ -10,7 +10,7 @@ use App\Data\PreviewParametersData;
 use App\Data\SeoData;
 use App\ValueObjects\AuditScore;
 use App\ValueObjects\MetricValue;
-use App\ValueObjects\Url;
+use App\ValueObjects\SafeUrl;
 
 final class BuildPreviewAuditAction
 {
@@ -20,7 +20,7 @@ final class BuildPreviewAuditAction
         $accessibilityScore = rand(75, 100) / 100;
 
         return new AuditData(
-            targetUrl: new Url('https://www.example.com/'),
+            targetUrl: new SafeUrl('https://www.example.com/'),
             score: new AuditScore($params->score),
             lcp: MetricValue::fromDisplayValue($params->lcp),
             fcp: MetricValue::fromDisplayValue($params->fcp),

@@ -10,7 +10,7 @@ use App\Data\SeoData;
 use App\Services\PdfGeneratorService;
 use App\ValueObjects\AuditScore;
 use App\ValueObjects\MetricValue;
-use App\ValueObjects\Url;
+use App\ValueObjects\SafeUrl;
 use Illuminate\Console\Command;
 
 class TestPdfGeneration extends Command
@@ -24,7 +24,7 @@ class TestPdfGeneration extends Command
         $this->info('Generating test PDF...');
 
         $auditData = new AuditData(
-            targetUrl: new Url('https://exemplo.com.br/'),
+            targetUrl: new SafeUrl('https://exemplo.com.br/'),
             score: new AuditScore(0.36),
             lcp: MetricValue::fromDisplayValue('4.2 s'),
             fcp: MetricValue::fromDisplayValue('2.8 s'),

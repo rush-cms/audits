@@ -6,14 +6,14 @@ namespace App\Data;
 
 use App\ValueObjects\AuditScore;
 use App\ValueObjects\MetricValue;
-use App\ValueObjects\Url;
+use App\ValueObjects\SafeUrl;
 use Illuminate\Support\Str;
 use Spatie\LaravelData\Data;
 
 final class AuditData extends Data
 {
     public function __construct(
-        public readonly Url $targetUrl,
+        public readonly SafeUrl $targetUrl,
         public readonly AuditScore $score,
         public readonly MetricValue $lcp,
         public readonly MetricValue $fcp,
@@ -51,7 +51,7 @@ final class AuditData extends Data
         $clsAudit = $audits['cumulative-layout-shift'];
 
         return new self(
-            targetUrl: new Url((string) $lighthouseResult['finalDisplayedUrl']),
+            targetUrl: new SafeUrl((string) $lighthouseResult['finalDisplayedUrl']),
             score: new AuditScore((float) $performance['score']),
             lcp: MetricValue::fromDisplayValue((string) $lcpAudit['displayValue']),
             fcp: MetricValue::fromDisplayValue((string) $fcpAudit['displayValue']),
