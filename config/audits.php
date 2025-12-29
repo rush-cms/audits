@@ -15,6 +15,8 @@ return [
 
     'pagespeed' => [
         'api_key' => env('PAGESPEED_API_KEY'),
+        'rate_limit_per_minute' => (int) env('PAGESPEED_RATE_LIMIT_PER_MINUTE', 6),
+        'rate_limit_per_day' => (int) env('PAGESPEED_RATE_LIMIT_PER_DAY', 25000),
     ],
 
     'webhook' => [
@@ -25,6 +27,21 @@ return [
 
     'pdf' => [
         'retention_days' => (int) env('AUDITS_RETENTION_DAYS', 7),
+    ],
+
+    'screenshots' => [
+        'delete_after_pdf' => (bool) env('AUDITS_DELETE_SCREENSHOTS_AFTER_PDF', true),
+        'orphaned_retention_hours' => (int) env('AUDITS_ORPHANED_SCREENSHOTS_RETENTION_HOURS', 24),
+    ],
+
+    'queue' => [
+        'pdf_concurrency' => (int) env('QUEUE_PDF_CONCURRENCY', 3),
+        'screenshot_concurrency' => (int) env('QUEUE_SCREENSHOT_CONCURRENCY', 5),
+        'max_depth_alert' => (int) env('QUEUE_MAX_DEPTH_ALERT', 100),
+    ],
+
+    'api' => [
+        'max_request_size' => (int) env('API_MAX_REQUEST_SIZE', 1048576),
     ],
 
     'idempotency_window' => (int) env('AUDITS_IDEMPOTENCY_WINDOW', 60),
@@ -43,6 +60,10 @@ return [
         'node_binary' => env('BROWSERSHOT_NODE_BINARY', '/usr/bin/node'),
         'npm_binary' => env('BROWSERSHOT_NPM_BINARY', '/usr/bin/npm'),
         'chrome_path' => env('BROWSERSHOT_CHROME_PATH', '/usr/bin/google-chrome'),
+        'timeout' => (int) env('BROWSERSHOT_TIMEOUT', 60),
+        'memory_limit' => (int) env('BROWSERSHOT_MEMORY_LIMIT', 512),
+        'max_concurrent_pdf' => (int) env('BROWSERSHOT_MAX_CONCURRENT_PDF', 3),
+        'max_concurrent_screenshots' => (int) env('BROWSERSHOT_MAX_CONCURRENT_SCREENSHOTS', 5),
     ],
 
     'security' => [
