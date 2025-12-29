@@ -14,6 +14,8 @@ Ideally used with **n8n** or other automation tools to ingest PageSpeed API data
 * **Whitelabel Ready:** Customize logos, brand names, CTA links, and more via config
 * **Asynchronous Processing:** Heavy PDF generation happens in the background via Queues
 * **Webhook Callbacks:** Receive a ping with the PDF URL as soon as it's ready
+* **Audit Persistence:** All audits stored in database with status tracking (pending, processing, completed, failed)
+* **Idempotency Support:** Prevents duplicate audits within configurable time windows
 * **Smart Pruning:** Auto-cleanup of old PDF files to save storage
 * **Token Authentication:** Built-in console commands to manage API clients
 * **Multi-language Support:** English, Portuguese (BR), and Spanish
@@ -31,12 +33,15 @@ Ideally used with **n8n** or other automation tools to ingest PageSpeed API data
 
 ## Workflow
 
-1. **Ingestion:** Send a URL or raw PageSpeed JSON to `POST /api/v1/scan`
-2. **PageSpeed Fetch:** If URL provided, fetches Performance, SEO & Accessibility data
-3. **Screenshot Capture:** Takes desktop (1920x1080) and mobile (375x812) screenshots
-4. **Image Optimization:** Converts screenshots to WebP (600px width)
-5. **PDF Generation:** Renders Blade views with Tailwind CSS, converts to PDF
-6. **Callback:** Sends POST request to your webhook URL with the PDF link
+1. **Ingestion:** Send a URL to `POST /api/v1/scan`
+2. **Idempotency Check:** Returns existing audit if duplicate within time window
+3. **Database Persistence:** Creates audit record with status `pending`
+4. **PageSpeed Fetch:** Fetches Performance, SEO & Accessibility data, marks audit as `processing`
+5. **Screenshot Capture:** Takes desktop (1920x1080) and mobile (375x812) screenshots
+6. **Image Optimization:** Converts screenshots to WebP (600px width)
+7. **PDF Generation:** Renders Blade views with Tailwind CSS, converts to PDF
+8. **Status Update:** Marks audit as `completed` with score, metrics, and PDF path
+9. **Callback:** Sends POST request to your webhook URL with the PDF link and metadata
 
 ## Environment Configuration
 
@@ -54,6 +59,7 @@ APP_TIMEZONE="America/Sao_Paulo"
 AUDITS_WEBHOOK_RETURN_URL="https://your-main-app.com/api/webhook/audit-ready"
 AUDITS_CONCURRENCY=1
 AUDITS_RETENTION_DAYS=7
+AUDITS_IDEMPOTENCY_WINDOW=60
 
 # Branding (Whitelabel)
 AUDITS_BRAND_NAME="Rush CMS"
@@ -85,6 +91,9 @@ BROWSERSHOT_CHROME_PATH="/usr/bin/google-chrome"
 | `AUDITS_SHOW_SEO` | `false` | Show SEO audit section |
 | `AUDITS_SHOW_ACCESSIBILITY` | `false` | Show Accessibility section |
 | `AUDITS_CTA_URL` | WhatsApp link | Call-to-action button URL |
+| `AUDITS_RETENTION_DAYS` | `7` | Days to keep PDF files before pruning |
+| `AUDITS_IDEMPOTENCY_WINDOW` | `60` | Minutes to prevent duplicate audits |
+| `AUDITS_WEBHOOK_TIMEOUT` | `30` | Webhook timeout in seconds |
 | `PAGESPEED_API_KEY` | `null` | Google PageSpeed API key |
 
 ## API Reference
@@ -100,7 +109,7 @@ Authorization: Bearer <your-token>
 
 **Endpoint:** `POST /api/v1/scan`
 
-**Option 1: URL-based (Recommended)**
+**Request:**
 ```json
 {
   "url": "https://example.com",
@@ -109,27 +118,58 @@ Authorization: Bearer <your-token>
 }
 ```
 
-**Option 2: Payload-based**
-```json
-{
-  "lighthouseResult": { ... }
-}
-```
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `url` | string | required | URL to analyze |
+| `lang` | string | `en` | Language: `en`, `pt_BR`, `es` |
+| `strategy` | string | `mobile` | Strategy: `mobile` or `desktop` |
 
 **Response:** `202 Accepted`
 ```json
 {
   "message": "Audit queued",
-  "audit_id": "98a3b2-...",
+  "audit_id": "550e8400-e29b-41d4-a716-446655440000",
+  "url": "https://example.com",
   "lang": "pt_BR",
-  "strategy": "mobile"
+  "strategy": "mobile",
+  "status": "pending"
 }
 ```
+
+**Note:** Duplicate requests within the idempotency window return the same `audit_id` without triggering new processing.
+
+### Get Audit Status
+
+**Endpoint:** `GET /api/v1/audits/{id}`
+
+**Response:** `200 OK`
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "url": "https://example.com",
+  "strategy": "mobile",
+  "lang": "pt_BR",
+  "status": "completed",
+  "score": 95,
+  "metrics": {
+    "lcp": "1.2 s",
+    "fcp": "0.8 s",
+    "cls": "0.05"
+  },
+  "pdf_url": "https://audits.rushcms.com/storage/reports/550e8400.pdf",
+  "error_message": null,
+  "created_at": "2025-12-29T04:00:00Z",
+  "completed_at": "2025-12-29T04:02:15Z"
+}
+```
+
+Status values: `pending`, `processing`, `completed`, `failed`
 
 ### Get Stats
 
 **Endpoint:** `GET /api/v1/stats`
 
+**Response:** `200 OK`
 ```json
 {
   "minute": 3,
@@ -138,6 +178,8 @@ Authorization: Bearer <your-token>
   "month": 1542
 }
 ```
+
+> **Full API Documentation:** [docs/api.md](docs/api.md)
 
 ## Console Commands
 

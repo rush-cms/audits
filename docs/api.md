@@ -21,11 +21,9 @@ php artisan audit:create-token "My Token"
 
 ## POST /api/v1/scan
 
-Submit a URL or PageSpeed payload for PDF generation.
+Submit a URL for PageSpeed analysis and PDF generation.
 
-### Option 1: URL-based (Recommended)
-
-Simply pass the URL and let the service fetch PageSpeed data automatically:
+### Request Body
 
 ```json
 {
@@ -41,37 +39,21 @@ Simply pass the URL and let the service fetch PageSpeed data automatically:
 | `lang` | string | `en` | Language: `en`, `pt_BR`, `es` |
 | `strategy` | string | `mobile` | Strategy: `mobile` or `desktop` |
 
-**What happens:**
-1. Fetches PageSpeed data (Performance, SEO, Accessibility)
-2. Takes desktop (1920x1080) and mobile (375x812) screenshots
-3. Converts screenshots to optimized WebP (600px width)
-4. Generates PDF with device mockups
-5. Sends webhook callback with PDF URL
+### Processing Pipeline
 
-### Option 2: Payload-based (Legacy/n8n)
+1. **Fetch PageSpeed Data** - Retrieves Performance, SEO, and Accessibility metrics
+2. **Capture Screenshots** - Desktop (1920x1080) and mobile (375x812) screenshots
+3. **Optimize Images** - Converts to WebP format (600px width)
+4. **Generate PDF** - Creates report with device mockups and metrics
+5. **Webhook Callback** - Sends notification with PDF URL (if configured)
 
-Send raw PageSpeed Insights JSON directly:
+### Idempotency
 
-```json
-{
-  "lighthouseResult": {
-    "finalDisplayedUrl": "https://example.com",
-    "categories": {
-      "performance": { "score": 0.95 },
-      "seo": { "score": 0.92 },
-      "accessibility": { "score": 0.88 }
-    },
-    "audits": {
-      "largest-contentful-paint": { "displayValue": "1.2 s" },
-      "first-contentful-paint": { "displayValue": "0.8 s" },
-      "cumulative-layout-shift": { "displayValue": "0.05" }
-    }
-  },
-  "lang": "pt_BR"
-}
-```
+The API implements automatic idempotency to prevent duplicate audits:
 
-**Note:** Payload-based requests skip screenshot capture since the site is not actively fetched.
+- Duplicate requests for the same URL and strategy within a time window (default: 60 minutes) return the same `audit_id`
+- No additional processing is triggered for duplicate requests
+- Idempotency window is configurable via `AUDITS_IDEMPOTENCY_WINDOW` (in minutes)
 
 ### Response
 
@@ -81,10 +63,59 @@ Send raw PageSpeed Insights JSON directly:
 {
   "message": "Audit queued",
   "audit_id": "550e8400-e29b-41d4-a716-446655440000",
+  "url": "https://example.com",
   "lang": "pt_BR",
-  "strategy": "mobile"
+  "strategy": "mobile",
+  "status": "pending"
 }
 ```
+
+---
+
+## GET /api/v1/audits/{id}
+
+Retrieve the status and results of a specific audit.
+
+### URL Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | UUID | Audit ID returned from POST /scan |
+
+### Response
+
+**200 OK**
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "url": "https://example.com",
+  "strategy": "mobile",
+  "lang": "pt_BR",
+  "status": "completed",
+  "score": 95,
+  "metrics": {
+    "lcp": "1.2 s",
+    "fcp": "0.8 s",
+    "cls": "0.05"
+  },
+  "pdf_url": "https://audits.yoursite.com/storage/reports/550e8400.pdf",
+  "error_message": null,
+  "created_at": "2025-12-29T04:00:00Z",
+  "completed_at": "2025-12-29T04:02:15Z"
+}
+```
+
+### Status Values
+
+| Status | Description |
+|--------|-------------|
+| `pending` | Audit created, waiting for processing |
+| `processing` | PageSpeed data is being fetched |
+| `completed` | PDF generated successfully |
+| `failed` | An error occurred during processing |
+
+**Note:** For failed audits, check the `error_message` field for details.
 
 ---
 
@@ -115,18 +146,27 @@ When PDF generation completes, a POST request is sent to `AUDITS_WEBHOOK_RETURN_
 
 ```json
 {
-  "audit_id": "550e8400-e29b-41d4-a716-446655440000",
+  "auditId": "550e8400-e29b-41d4-a716-446655440000",
   "status": "completed",
-  "target_url": "https://example.com",
-  "pdf_url": "https://audits.yoursite.com/storage/reports/550e8400.pdf",
+  "targetUrl": "https://example.com",
+  "pdfUrl": "https://audits.yoursite.com/storage/reports/550e8400.pdf",
   "score": 95,
   "metrics": {
     "lcp": "1.2 s",
     "fcp": "0.8 s",
     "cls": "0.05"
-  }
+  },
+  "strategy": "mobile",
+  "lang": "pt_BR"
 }
 ```
+
+### Webhook Configuration
+
+- **URL:** Set via `AUDITS_WEBHOOK_RETURN_URL` environment variable
+- **Timeout:** Configurable via `AUDITS_WEBHOOK_TIMEOUT` (default: 30 seconds)
+- **Retries:** Failed webhooks are retried up to 2 times via job queue
+- **HTTP Method:** POST with JSON payload
 
 ---
 
