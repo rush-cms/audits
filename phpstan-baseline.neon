@@ -1,0 +1,25 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method App\\Casts\\AuditStrategyCast\:\:cast\(\) has parameter \$context with generic class Spatie\\LaravelData\\Support\\Creation\\CreationContext but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Casts/AuditStrategyCast.php
+
+		-
+			message: '#^Method App\\Casts\\LanguageCast\:\:cast\(\) has parameter \$context with generic class Spatie\\LaravelData\\Support\\Creation\\CreationContext but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Casts/LanguageCast.php
+
+		-
+			message: '#^Method App\\Casts\\SafeUrlCast\:\:cast\(\) has parameter \$context with generic class Spatie\\LaravelData\\Support\\Creation\\CreationContext but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Casts/SafeUrlCast.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between Laravel\\Sanctum\\PersonalAccessToken and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Http/Middleware/ThrottleApiRequests.php

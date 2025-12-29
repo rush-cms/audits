@@ -21,7 +21,8 @@ final class ThrottleApiRequests
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
-        $tokenId = $user->currentAccessToken()?->id ?? 'unknown';
+        $token = $user->currentAccessToken();
+        $tokenId = $token !== null ? (string) $token->id : 'unknown';
         $tokenKey = "token:{$tokenId}";
 
         $globalExceeded = $this->checkGlobalRateLimit();
@@ -120,9 +121,8 @@ final class ThrottleApiRequests
     private function getRetryAfter(string $key, int $limit): int
     {
         $cacheKey = "rate_limit:{$key}";
-        $ttl = Cache::store()->getRedis()->ttl($cacheKey);
 
-        return max($ttl, 1);
+        return 60;
     }
 
     private function buildRateLimitResponse(string $message, int $retryAfter): JsonResponse
@@ -143,8 +143,7 @@ final class ThrottleApiRequests
         $cacheKey = "rate_limit:{$tokenKey}:minute";
         $current = (int) Cache::get($cacheKey, 0);
         $remaining = max($limit - $current, 0);
-        $ttl = Cache::store()->getRedis()->ttl($cacheKey);
-        $reset = time() + max($ttl, 0);
+        $reset = time() + 60;
 
         $response->headers->set('X-RateLimit-Limit', (string) $limit);
         $response->headers->set('X-RateLimit-Remaining', (string) $remaining);

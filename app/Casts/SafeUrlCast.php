@@ -11,6 +11,9 @@ use Spatie\LaravelData\Support\DataProperty;
 
 final class SafeUrlCast implements Cast
 {
+    /**
+     * @param  array<string, mixed>  $properties
+     */
     public function cast(DataProperty $property, mixed $value, array $properties, CreationContext $context): SafeUrl
     {
         if ($value instanceof SafeUrl) {

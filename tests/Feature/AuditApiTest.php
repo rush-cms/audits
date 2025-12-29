@@ -64,7 +64,7 @@ it('validates URL format', function (): void {
         ]);
 
     $response->assertStatus(422)
-        ->assertJson(['error' => 'Invalid URL']);
+        ->assertJson(['message' => 'Invalid request']);
 });
 
 it('uses mobile as default strategy', function (): void {

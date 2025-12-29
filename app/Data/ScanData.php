@@ -24,6 +24,9 @@ final class ScanData extends Data
         public AuditStrategy $strategy,
     ) {}
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public static function rules(): array
     {
         return [
@@ -33,6 +36,9 @@ final class ScanData extends Data
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public static function messages(): array
     {
         return [

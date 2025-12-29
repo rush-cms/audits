@@ -20,7 +20,7 @@ final readonly class SafeUrl implements Stringable
         $this->validateFormat($url);
         $this->validateScheme($url);
 
-        if (app()->isProduction()) {
+        if ($this->isProduction()) {
             $this->preventSSRF($url);
         }
 
@@ -67,7 +67,7 @@ final readonly class SafeUrl implements Stringable
     {
         $host = parse_url($url, PHP_URL_HOST);
 
-        if ($host === null || $host === '') {
+        if ($host === null || $host === '' || $host === false) {
             throw new InvalidUrlException('URL must have a valid host');
         }
 
@@ -154,5 +154,16 @@ final readonly class SafeUrl implements Stringable
         );
 
         return $isNotPrivate === false;
+    }
+
+    private function isProduction(): bool
+    {
+        $env = getenv('APP_ENV');
+
+        if ($env === false) {
+            $env = $_ENV['APP_ENV'] ?? 'production';
+        }
+
+        return $env === 'production';
     }
 }

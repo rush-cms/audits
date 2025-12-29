@@ -11,6 +11,9 @@ use Spatie\LaravelData\Support\DataProperty;
 
 final class AuditStrategyCast implements Cast
 {
+    /**
+     * @param  array<string, mixed>  $properties
+     */
     public function cast(DataProperty $property, mixed $value, array $properties, CreationContext $context): AuditStrategy
     {
         if ($value instanceof AuditStrategy) {

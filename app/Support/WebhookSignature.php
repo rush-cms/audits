@@ -6,9 +6,10 @@ namespace App\Support;
 
 final class WebhookSignature
 {
-    public function __construct(
-        private readonly ?string $secret = null
-    ) {
+    private readonly ?string $secret;
+
+    public function __construct(?string $secret = null)
+    {
         $this->secret = $secret ?? config('audits.webhook.secret');
     }
 
@@ -38,6 +39,9 @@ final class WebhookSignature
         return $expectedSignature !== null && hash_equals($expectedSignature, $signature);
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function generateHeaders(string $payload): array
     {
         $timestamp = time();

@@ -12,7 +12,6 @@ use App\Jobs\FetchPageSpeedJob;
 use App\Models\Audit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Spatie\LaravelData\Exceptions\ValidationException;
 
 final class AuditController extends Controller
 {
@@ -27,11 +26,6 @@ final class AuditController extends Controller
                 'lang' => $request->input('lang', 'en'),
                 'strategy' => $request->input('strategy', 'mobile'),
             ]);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Invalid request',

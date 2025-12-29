@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 use App\ValueObjects\AuditScore;
 use App\ValueObjects\MetricValue;
-use App\ValueObjects\Url;
+use App\ValueObjects\SafeUrl;
 
-describe('Url', function (): void {
+describe('SafeUrl', function (): void {
     it('accepts valid URLs', function (): void {
-        $url = new Url('https://example.com');
+        $url = new SafeUrl('https://example.com');
 
         expect($url->__toString())->toBe('https://example.com');
         expect($url->getHost())->toBe('example.com');
     });
 
     it('throws on invalid URL', function (): void {
-        new Url('not-a-url');
+        new SafeUrl('not-a-url');
     })->throws(InvalidArgumentException::class);
 
     it('trims whitespace', function (): void {
-        $url = new Url('  https://example.com  ');
+        $url = new SafeUrl('  https://example.com  ');
 
         expect($url->__toString())->toBe('https://example.com');
     });
