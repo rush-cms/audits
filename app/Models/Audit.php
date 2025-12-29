@@ -18,6 +18,10 @@ use Illuminate\Database\Eloquent\Model;
  * @property array<string, string>|null $metrics
  * @property string|null $pdf_path
  * @property string|null $error_message
+ * @property array<string, mixed>|null $pagespeed_data
+ * @property array<string, mixed>|null $screenshots_data
+ * @property array<string, mixed>|null $processing_steps
+ * @property \Illuminate\Support\Carbon|null $last_attempt_at
  * @property \Illuminate\Support\Carbon|null $completed_at
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
@@ -41,6 +45,10 @@ final class Audit extends Model
         'metrics',
         'pdf_path',
         'error_message',
+        'pagespeed_data',
+        'screenshots_data',
+        'processing_steps',
+        'last_attempt_at',
         'completed_at',
     ];
 
@@ -51,6 +59,10 @@ final class Audit extends Model
     {
         return [
             'metrics' => 'array',
+            'pagespeed_data' => 'array',
+            'screenshots_data' => 'array',
+            'processing_steps' => 'array',
+            'last_attempt_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
     }
