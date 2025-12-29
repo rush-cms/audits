@@ -92,9 +92,15 @@ final class ScreenshotService
             ->setNpmBinary(config('audits.browsershot.npm_binary'))
             ->setChromePath(config('audits.browsershot.chrome_path'))
             ->noSandbox()
+            ->setOption('args', [
+                '--no-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--max-old-space-size='.config('audits.browsershot.memory_limit'),
+            ])
             ->dismissDialogs()
             ->waitUntilNetworkIdle()
-            ->timeout(30);
+            ->timeout(config('audits.browsershot.timeout'));
     }
 
     private function convertToWebp(string $sourcePath, string $destinationPath): void

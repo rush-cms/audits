@@ -37,6 +37,13 @@ final class PdfGeneratorService
             ->setNpmBinary(config('audits.browsershot.npm_binary'))
             ->setChromePath(config('audits.browsershot.chrome_path'))
             ->noSandbox()
+            ->setOption('args', [
+                '--no-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--max-old-space-size='.config('audits.browsershot.memory_limit'),
+            ])
+            ->timeout(config('audits.browsershot.timeout'))
             ->emulateMedia('print')
             ->format('A4')
             ->margins(15, 15, 15, 15)
