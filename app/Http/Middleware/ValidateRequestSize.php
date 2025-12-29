@@ -13,7 +13,7 @@ final class ValidateRequestSize
     public function handle(Request $request, Closure $next): Response
     {
         $maxSize = (int) config('audits.api.max_request_size', 1048576);
-        $contentLength = $request->header('Content-Length', 0);
+        $contentLength = (int) ($request->header('Content-Length') ?? 0);
 
         if ($contentLength > $maxSize) {
             return response()->json([
