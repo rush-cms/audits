@@ -14,20 +14,54 @@ final class CreateOrFindAuditAction
 
     public function execute(string $url, string $strategy, string $lang): Audit
     {
+        $existingAudit = $this->findExistingAudit($url, $strategy);
+
+        if ($existingAudit && $this->shouldReturnExisting($existingAudit)) {
+            return $existingAudit;
+        }
+
+        return $this->createNewAudit($url, $strategy, $lang);
+    }
+
+    private function findExistingAudit(string $url, string $strategy): ?Audit
+    {
+        return Audit::where('url', $url)
+            ->where('strategy', $strategy)
+            ->orderByDesc('created_at')
+            ->first();
+    }
+
+    private function shouldReturnExisting(Audit $audit): bool
+    {
+        if (in_array($audit->status, ['pending', 'processing'], true)) {
+            return true;
+        }
+
+        if ($audit->status === 'failed') {
+            $retryAfterSeconds = (int) config('audits.failed_retry_after', 300);
+
+            if ($audit->last_attempt_at && $audit->last_attempt_at->diffInSeconds(now()) < $retryAfterSeconds) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function createNewAudit(string $url, string $strategy, string $lang): Audit
+    {
         $idempotencyKey = Audit::generateIdempotencyKey($url, $strategy);
         $attempt = 0;
 
         while ($attempt < self::MAX_ATTEMPTS) {
             try {
-                return Audit::firstOrCreate(
-                    ['idempotency_key' => $idempotencyKey],
-                    [
-                        'url' => $url,
-                        'strategy' => $strategy,
-                        'lang' => $lang,
-                        'status' => 'pending',
-                    ]
-                );
+                return Audit::create([
+                    'idempotency_key' => $idempotencyKey,
+                    'url' => $url,
+                    'strategy' => $strategy,
+                    'lang' => $lang,
+                    'status' => 'pending',
+                ]);
             } catch (QueryException $e) {
                 if ($this->isDuplicateKeyError($e)) {
                     $attempt++;

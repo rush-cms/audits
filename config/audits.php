@@ -29,6 +29,10 @@ return [
 
     'idempotency_window' => (int) env('AUDITS_IDEMPOTENCY_WINDOW', 60),
 
+    'failed_retry_after' => (int) env('AUDITS_FAILED_RETRY_AFTER', 300),
+
+    'require_screenshots' => (bool) env('AUDITS_REQUIRE_SCREENSHOTS', false),
+
     'browsershot' => [
         'node_binary' => env('BROWSERSHOT_NODE_BINARY', '/usr/bin/node'),
         'npm_binary' => env('BROWSERSHOT_NPM_BINARY', '/usr/bin/npm'),

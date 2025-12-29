@@ -69,7 +69,10 @@ final class Audit extends Model
 
     public function markAsProcessing(): void
     {
-        $this->update(['status' => 'processing']);
+        $this->update([
+            'status' => 'processing',
+            'last_attempt_at' => now(),
+        ]);
     }
 
     /**
@@ -105,9 +108,6 @@ final class Audit extends Model
 
     public static function generateIdempotencyKey(string $url, string $strategy): string
     {
-        $windowMinutes = (int) config('audits.idempotency_window', 60);
-        $windowStart = now()->floorMinutes($windowMinutes)->timestamp;
-
-        return hash('sha256', $url.$strategy.$windowStart);
+        return hash('sha256', $url.$strategy.microtime(true).random_bytes(16));
     }
 }
