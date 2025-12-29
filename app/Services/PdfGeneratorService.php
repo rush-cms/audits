@@ -60,6 +60,10 @@ final class PdfGeneratorService
         $manifestPath = public_path('build/.vite/manifest.json');
 
         if (! file_exists($manifestPath)) {
+            $manifestPath = public_path('build/manifest.json');
+        }
+
+        if (! file_exists($manifestPath)) {
             return $this->getFallbackCss();
         }
 
