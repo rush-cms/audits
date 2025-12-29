@@ -11,6 +11,8 @@ use App\Services\PdfGeneratorService;
 use App\Services\WebhookDispatcherService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\Middleware\RateLimited;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -26,6 +28,17 @@ final class GenerateAuditPdfJob implements ShouldQueue
         public readonly string $strategy = 'mobile',
         public readonly string $lang = 'en',
     ) {}
+
+    /**
+     * @return array<int, object>
+     */
+    public function middleware(): array
+    {
+        return [
+            new WithoutOverlapping($this->auditId),
+            new RateLimited('pdf-generation'),
+        ];
+    }
 
     public function handle(
         PdfGeneratorService $pdfGenerator,
