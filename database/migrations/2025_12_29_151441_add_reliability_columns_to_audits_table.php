@@ -24,13 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('audits', function (Blueprint $table) {
-            $table->dropColumn([
-                'pagespeed_data',
-                'screenshots_data',
-                'processing_steps',
-                'last_attempt_at',
-            ]);
-        });
+        //
     }
 };
