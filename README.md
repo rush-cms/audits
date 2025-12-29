@@ -61,6 +61,17 @@ Ideally used with **n8n** or other automation tools to ingest PageSpeed API data
 8. **Status Update:** Marks audit as `completed` with score, metrics, and PDF path
 9. **Callback:** Sends POST request to your webhook URL with the PDF link and metadata
 
+## Roadmap
+
+Some features are not yet implemented, but are planned for the future:
+
+- S3/R2 storage support
+- CORS configuration
+- Factories for audit testing
+- Admin dashboard with template customization
+- Audit comparisions
+- Internal check-ups with advanced SEO metrics
+
 ## Environment Configuration
 
 ```bash
@@ -225,10 +236,10 @@ In production (`APP_ENV=production`), the service automatically blocks:
 
 **Example blocked URLs in production:**
 ```
-http://localhost:8000/admin          ❌ Blocked
-http://192.168.1.1/                   ❌ Blocked
+http://localhost:8000/admin ❌ Blocked
+http://192.168.1.1/ ❌ Blocked
 http://169.254.169.254/latest/meta-data/ ❌ Blocked (AWS metadata)
-https://example.com                   ✅ Allowed
+https://example.com ✅ Allowed
 ```
 
 In local/development (`APP_ENV=local`), SSRF protection is **disabled** to allow testing against local services.
