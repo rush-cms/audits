@@ -37,7 +37,7 @@ final class RetryFailedWebhooksCommand extends Command
         $queued = 0;
 
         foreach ($failedAudits as $audit) {
-            $pdfUrl = asset('storage/reports/'.basename($audit->pdf_path));
+            $pdfUrl = asset('storage/reports/'.basename((string) $audit->pdf_path));
 
             DispatchWebhookJob::dispatch($audit->id, $pdfUrl);
 

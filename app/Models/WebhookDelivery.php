@@ -50,6 +50,9 @@ final class WebhookDelivery extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Audit, $this>
+     */
     public function audit(): BelongsTo
     {
         return $this->belongsTo(Audit::class);

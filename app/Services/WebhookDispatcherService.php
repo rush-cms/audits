@@ -109,8 +109,6 @@ final class WebhookDispatcherService
                     'response_body' => $responseBody,
                 ]);
 
-                $this->fail();
-
                 return;
             }
 

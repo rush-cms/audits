@@ -154,6 +154,9 @@ final class Audit extends Model
         return asset('storage/reports/'.basename($this->pdf_path));
     }
 
+    /**
+     * @return HasMany<WebhookDelivery, $this>
+     */
     public function webhookDeliveries(): HasMany
     {
         return $this->hasMany(WebhookDelivery::class);
