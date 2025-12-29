@@ -183,9 +183,118 @@ When PDF generation completes, a POST request is sent to `AUDITS_WEBHOOK_RETURN_
 ### Webhook Configuration
 
 - **URL:** Set via `AUDITS_WEBHOOK_RETURN_URL` environment variable
-- **Timeout:** Configurable via `AUDITS_WEBHOOK_TIMEOUT` (default: 30 seconds)
-- **Retries:** Failed webhooks are retried up to 2 times via job queue
+- **Timeout:** `AUDITS_WEBHOOK_TIMEOUT` (default: 5 seconds)
+- **Connect Timeout:** `AUDITS_WEBHOOK_CONNECT_TIMEOUT` (default: 2 seconds)
+- **Max Attempts:** `AUDITS_WEBHOOK_MAX_ATTEMPTS` (default: 5)
 - **HTTP Method:** POST with JSON payload
+
+### Webhook Retry Strategy
+
+Webhooks are automatically retried on failure with exponential backoff:
+
+| Attempt | Delay | Notes |
+|---------|-------|-------|
+| 1 | Immediate | First attempt |
+| 2 | 30s ± 20% | Jitter added |
+| 3 | 1m ± 20% | Jitter added |
+| 4 | 5m ± 20% | Jitter added |
+| 5 | 15m ± 20% | Final attempt |
+
+**HTTP Status Code Handling:**
+- **2xx**: Success, no retry
+- **4xx**: Client error, no retry (check your endpoint)
+- **5xx**: Server error, will retry
+- **Timeout/Connection Error**: Will retry
+
+**Retry Headers:**
+
+Each webhook request includes retry information:
+
+```
+X-Webhook-Attempt: 3
+X-Webhook-Max-Attempts: 5
+```
+
+### Webhook Delivery History
+
+All webhook delivery attempts are tracked and accessible via the API.
+
+**GET /api/v1/audits/{id}** now includes `webhook_deliveries`:
+
+```json
+{
+  "id": "550e8400-...",
+  "webhook_deliveries": [
+    {
+      "attempt": 1,
+      "status": 500,
+      "response_time_ms": 2341,
+      "delivered_at": null,
+      "error": "Internal Server Error",
+      "created_at": "2025-12-29T10:00:00Z"
+    },
+    {
+      "attempt": 2,
+      "status": 200,
+      "response_time_ms": 145,
+      "delivered_at": "2025-12-29T10:05:30Z",
+      "created_at": "2025-12-29T10:05:30Z"
+    }
+  ]
+}
+```
+
+### Manual Webhook Retry
+
+If webhook delivery fails, you can manually retry:
+
+```bash
+# Retry specific audit
+php artisan webhook:retry 550e8400-e29b-41d4-a716-446655440000
+
+# Retry all failed webhooks (max 50)
+php artisan webhook:retry-failed
+
+# Retry more
+php artisan webhook:retry-failed --limit=100
+```
+
+### Webhook Best Practices
+
+**Your Endpoint Should:**
+- Respond within 5 seconds
+- Return 2xx status code on success
+- Return 4xx for validation/auth errors (won't retry)
+- Return 5xx for temporary errors (will retry)
+- Process data asynchronously if needed
+
+**Example Implementation:**
+
+```php
+// Acknowledge immediately, process async
+Route::post('/webhook/audit', function (Request $request) {
+    // Quick validation
+    $validated = $request->validate([
+        'auditId' => 'required|uuid',
+        'pdfUrl' => 'required|url',
+    ]);
+
+    // Queue processing
+    ProcessAuditJob::dispatch($validated);
+
+    // Respond immediately
+    return response()->json(['acknowledged' => true]);
+});
+```
+
+### Webhook Failure Notifications
+
+If all retry attempts fail, notifications are sent (if configured):
+
+**Email:** `AUDITS_ADMIN_EMAIL`
+**Slack:** `AUDITS_SLACK_WEBHOOK_URL`
+
+Notifications are rate-limited (1/hour per audit) to prevent spam.
 
 ---
 
