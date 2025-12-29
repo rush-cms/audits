@@ -132,8 +132,13 @@ BROWSERSHOT_CHROME_PATH="/usr/bin/google-chrome"
 | `AUDITS_FAILED_JOBS_RETENTION_DAYS` | `30` | Days to keep failed jobs before cleanup |
 | `AUDITS_JOB_MAX_ATTEMPTS` | `3` | Maximum retry attempts for failed jobs |
 | `AUDITS_JOB_BACKOFF_BASE` | `30` | Base delay in seconds for job retry backoff |
-| `AUDITS_WEBHOOK_TIMEOUT` | `30` | Webhook timeout in seconds |
+| `AUDITS_WEBHOOK_TIMEOUT` | `5` | Webhook timeout in seconds |
+| `AUDITS_WEBHOOK_CONNECT_TIMEOUT` | `2` | Webhook connection timeout in seconds |
+| `AUDITS_WEBHOOK_MAX_ATTEMPTS` | `5` | Maximum webhook retry attempts |
 | `AUDITS_WEBHOOK_SECRET` | `null` | Secret for webhook HMAC signatures |
+| `AUDITS_NOTIFY_ON_WEBHOOK_FAILURE` | `true` | Send notifications on webhook failure |
+| `AUDITS_ADMIN_EMAIL` | `null` | Admin email for failure notifications |
+| `AUDITS_SLACK_WEBHOOK_URL` | `null` | Slack webhook URL for failure notifications |
 | `AUDITS_RATE_LIMIT_PER_MINUTE` | `60` | Requests per minute per token |
 | `AUDITS_RATE_LIMIT_PER_HOUR` | `500` | Requests per hour per token |
 | `AUDITS_RATE_LIMIT_PER_DAY` | `2000` | Requests per day per token |
@@ -365,6 +370,13 @@ php artisan audits:prune-orphaned-screenshots
 
 # Cleanup old failed jobs
 php artisan audits:cleanup-failed-jobs
+
+# Retry failed webhook delivery
+php artisan webhook:retry {audit_id}
+php artisan webhook:retry-failed --limit=50
+
+# Prune old webhook delivery records
+php artisan webhook:prune-deliveries --days=30
 
 # Analyze query performance
 php artisan audits:explain-queries
