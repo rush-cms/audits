@@ -48,7 +48,7 @@ final class GenerateAuditPdfJob implements ShouldQueue
             pdfPath: $pdfPath,
         );
 
-        $webhookDispatcher->dispatch($audit, $pdfUrl, $this->strategy, $this->lang);
+        $webhookDispatcher->dispatch($audit, $pdfUrl);
     }
 
     public function failed(?Throwable $exception): void

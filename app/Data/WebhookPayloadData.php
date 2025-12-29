@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Data;
 
+use App\Models\Audit;
 use Spatie\LaravelData\Data;
 
 final class WebhookPayloadData extends Data
@@ -15,21 +16,25 @@ final class WebhookPayloadData extends Data
         public readonly string $pdfUrl,
         public readonly int $score,
         public readonly WebhookMetricsData $metrics,
+        public readonly string $strategy,
+        public readonly string $lang,
     ) {}
 
-    public static function fromAuditData(AuditData $audit, string $pdfUrl): self
+    public static function fromAudit(Audit $audit, string $pdfUrl): self
     {
         return new self(
-            auditId: $audit->auditId,
-            status: 'completed',
-            targetUrl: (string) $audit->targetUrl,
+            auditId: $audit->id,
+            status: $audit->status,
+            targetUrl: $audit->url,
             pdfUrl: $pdfUrl,
-            score: $audit->score->toPercentage(),
+            score: $audit->score ?? 0,
             metrics: new WebhookMetricsData(
-                lcp: $audit->lcp->format(),
-                fcp: $audit->fcp->format(),
-                cls: $audit->cls->format(),
+                lcp: $audit->metrics['lcp'] ?? 'N/A',
+                fcp: $audit->metrics['fcp'] ?? 'N/A',
+                cls: $audit->metrics['cls'] ?? 'N/A',
             ),
+            strategy: $audit->strategy,
+            lang: $audit->lang,
         );
     }
 }
