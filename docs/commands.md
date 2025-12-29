@@ -108,11 +108,87 @@ Run this command regularly (e.g., weekly) via cron or scheduler to maintain data
 
 ---
 
+## audits:prune-orphaned-screenshots
+
+Remove orphaned screenshot files to save disk space.
+
+```bash
+php artisan audits:prune-orphaned-screenshots
+```
+
+**Description:**
+Deletes screenshot files older than the configured retention period that are not associated with any audit. This handles cases where PDF generation failed before screenshots could be cleaned up.
+
+**Configuration:**
+- `AUDITS_ORPHANED_SCREENSHOTS_RETENTION_HOURS` - Hours before orphaned screenshots are deleted (default: 24)
+
+**Example output:**
+```
+Deleted 12 orphaned screenshots (5.43 MB)
+```
+
+**How it works:**
+1. Scans `storage/app/public/screenshots/`
+2. Finds files older than retention period (default 24 hours)
+3. Deletes them and reports total size freed
+
+**Recommendation:**
+This command runs daily at 03:00 via the scheduler. No manual intervention needed.
+
+---
+
+## audits:explain-queries
+
+Analyze common database queries to verify index usage.
+
+```bash
+php artisan audits:explain-queries
+```
+
+**Description:**
+Runs `EXPLAIN` on common queries to verify that database indexes are being used correctly. Useful for performance troubleshooting and ensuring query optimization.
+
+**Example output:**
+```
+Analyzing common queries...
+
+Query: Find pending/processing audits by URL and strategy
+SELECT * FROM audits WHERE url = 'https://example.com' AND strategy = 'mobile' AND status IN ('pending', 'processing') ORDER BY created_at DESC LIMIT 1
+
++----+-------------+--------+-------+---------------------------+---------------------------+---------+------+------+-------------+
+| id | select_type | table  | type  | possible_keys             | key                       | key_len | ref  | rows | Extra       |
++----+-------------+--------+-------+---------------------------+---------------------------+---------+------+------+-------------+
+|  1 | SIMPLE      | audits | range | audits_url_strategy_index | audits_url_strategy_index | 1033    | NULL |    5 | Using where |
++----+-------------+--------+-------+---------------------------+---------------------------+---------+------+------+-------------+
+
+Analysis complete!
+```
+
+**What to look for:**
+- **type**: Should be `ref`, `range`, or `index` (not `ALL`)
+- **key**: Should show an index name (not `NULL`)
+- **rows**: Lower is better (ideally < 100)
+
+**When to run:**
+- After adding new indexes
+- When investigating slow queries
+- As part of performance optimization
+
+---
+
 ## Scheduler
 
-The `audit:prune-pdfs` command runs daily automatically via Laravel Scheduler.
+The following commands run automatically via Laravel Scheduler:
+
+- `audit:prune-pdfs` - Daily (default time)
+- `audits:prune-orphaned-screenshots` - Daily at 03:00
 
 To enable, add to crontab:
 ```bash
 * * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+**Check scheduled tasks:**
+```bash
+php artisan schedule:list
 ```

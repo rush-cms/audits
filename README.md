@@ -138,7 +138,19 @@ BROWSERSHOT_CHROME_PATH="/usr/bin/google-chrome"
 | `AUDITS_RATE_LIMIT_PER_HOUR` | `500` | Requests per hour per token |
 | `AUDITS_RATE_LIMIT_PER_DAY` | `2000` | Requests per day per token |
 | `AUDITS_RATE_LIMIT_GLOBAL_PER_MINUTE` | `200` | Global requests per minute |
+| `AUDITS_DELETE_SCREENSHOTS_AFTER_PDF` | `true` | Delete screenshots after PDF generation |
+| `AUDITS_ORPHANED_SCREENSHOTS_RETENTION_HOURS` | `24` | Hours before orphaned screenshots are deleted |
 | `PAGESPEED_API_KEY` | `null` | Google PageSpeed API key |
+| `PAGESPEED_RATE_LIMIT_PER_MINUTE` | `6` | PageSpeed API calls per minute (free tier) |
+| `PAGESPEED_RATE_LIMIT_PER_DAY` | `25000` | PageSpeed API calls per day (with API key) |
+| `QUEUE_PDF_CONCURRENCY` | `3` | Max concurrent PDF generation jobs |
+| `QUEUE_SCREENSHOT_CONCURRENCY` | `5` | Max concurrent screenshot capture jobs |
+| `QUEUE_MAX_DEPTH_ALERT` | `100` | Queue depth threshold for alerts |
+| `API_MAX_REQUEST_SIZE` | `1048576` | Max request payload size in bytes (1MB) |
+| `BROWSERSHOT_TIMEOUT` | `60` | Browsershot process timeout in seconds |
+| `BROWSERSHOT_MEMORY_LIMIT` | `512` | Browsershot max memory in MB per process |
+| `BROWSERSHOT_MAX_CONCURRENT_PDF` | `3` | Max concurrent Browsershot PDF processes |
+| `BROWSERSHOT_MAX_CONCURRENT_SCREENSHOTS` | `5` | Max concurrent Browsershot screenshot processes |
 
 ## API Reference
 
@@ -348,8 +360,14 @@ php artisan test:pdf --lang=pt_BR
 # Prune old PDFs
 php artisan audit:prune-pdfs
 
+# Prune orphaned screenshots
+php artisan audits:prune-orphaned-screenshots
+
 # Cleanup old failed jobs
 php artisan audits:cleanup-failed-jobs
+
+# Analyze query performance
+php artisan audits:explain-queries
 
 # Check browser setup
 php artisan audit:check-browser

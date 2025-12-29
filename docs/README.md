@@ -9,6 +9,12 @@ Welcome to the Rush CMS Audits microservice documentation.
 3. [API Reference](api.md)
 4. [Console Commands](commands.md)
 
+## Operations
+
+- [Performance & Resource Limits](performance.md)
+- [Monitoring](monitoring.md)
+- [Troubleshooting](troubleshooting.md)
+
 ## Overview
 
 This microservice generates performance audit PDFs from Google PageSpeed Insights data. It's designed to be:
