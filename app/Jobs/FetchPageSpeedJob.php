@@ -53,6 +53,21 @@ final class FetchPageSpeedJob implements ShouldQueue
             ]);
 
             TakeScreenshotsJob::dispatch($this->auditId, $auditData, $this->strategy, $this->lang);
+        } catch (\RuntimeException $e) {
+            if (str_contains($e->getMessage(), 'quota exceeded')) {
+                $retryAfter = str_contains($e->getMessage(), 'minute') ? 60 : 3600;
+
+                Log::channel('audits')->warning('PageSpeed quota exceeded, retrying later', [
+                    'audit_id' => $this->auditId,
+                    'retry_after' => $retryAfter,
+                ]);
+
+                $this->release($retryAfter);
+
+                return;
+            }
+
+            throw $e;
         } catch (Throwable $e) {
             $duration = round((microtime(true) - $startTime) * 1000);
 
