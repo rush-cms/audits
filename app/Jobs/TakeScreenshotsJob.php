@@ -28,10 +28,18 @@ final class TakeScreenshotsJob implements ShouldQueue
 
     public function handle(ScreenshotService $screenshotService): void
     {
+        $audit = Audit::findOrFail($this->auditId);
+
         $result = $screenshotService->capture(
             (string) $this->auditData->targetUrl,
             $this->auditData->auditId,
         );
+
+        $audit->update([
+            'screenshots_data' => $result,
+        ]);
+
+        $audit->recordStep('take_screenshots', 'completed');
 
         $updatedAuditData = new AuditData(
             targetUrl: $this->auditData->targetUrl,
@@ -56,6 +64,10 @@ final class TakeScreenshotsJob implements ShouldQueue
         $audit = Audit::find($this->auditId);
 
         if ($audit) {
+            $audit->recordStep('take_screenshots', 'failed', [
+                'error' => $exception?->getMessage() ?? 'Failed to capture screenshots',
+            ]);
+
             $audit->markAsFailed($exception?->getMessage() ?? 'Failed to capture screenshots');
         }
     }

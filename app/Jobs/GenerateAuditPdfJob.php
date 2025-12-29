@@ -31,16 +31,18 @@ final class GenerateAuditPdfJob implements ShouldQueue
         PdfGeneratorService $pdfGenerator,
         WebhookDispatcherService $webhookDispatcher,
     ): void {
+        $audit = Audit::findOrFail($this->auditId);
+
         $pdfPath = $pdfGenerator->generate($this->auditData, $this->lang);
         $pdfUrl = $pdfGenerator->getPublicUrl($pdfPath);
-
-        $audit = Audit::findOrFail($this->auditId);
 
         $metrics = [
             'lcp' => $this->auditData->lcp->format(),
             'fcp' => $this->auditData->fcp->format(),
             'cls' => $this->auditData->cls->format(),
         ];
+
+        $audit->recordStep('generate_pdf', 'completed');
 
         $audit->markAsCompleted(
             score: $this->auditData->score->toPercentage(),
@@ -56,6 +58,10 @@ final class GenerateAuditPdfJob implements ShouldQueue
         $audit = Audit::find($this->auditId);
 
         if ($audit) {
+            $audit->recordStep('generate_pdf', 'failed', [
+                'error' => $exception?->getMessage() ?? 'Failed to generate PDF',
+            ]);
+
             $audit->markAsFailed($exception?->getMessage() ?? 'Failed to generate PDF');
         }
     }

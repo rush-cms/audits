@@ -94,7 +94,34 @@ final class Audit extends Model
         $this->update([
             'status' => 'failed',
             'error_message' => $errorMessage,
+            'last_attempt_at' => now(),
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function recordStep(string $stepName, string $status, ?array $data = null): void
+    {
+        $steps = $this->processing_steps ?? [];
+
+        $step = [
+            'name' => $stepName,
+            'status' => $status,
+            'timestamp' => now()->toIso8601String(),
+        ];
+
+        if ($data) {
+            $step['data'] = $data;
+        }
+
+        if ($status === 'failed' && isset($data['error'])) {
+            $step['error'] = $data['error'];
+        }
+
+        $steps[] = $step;
+
+        $this->update(['processing_steps' => $steps]);
     }
 
     public function getPdfUrlAttribute(): ?string

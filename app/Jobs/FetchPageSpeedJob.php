@@ -35,6 +35,12 @@ final class FetchPageSpeedJob implements ShouldQueue
 
         $auditData = AuditData::fromLighthouseResult($lighthouseResult);
 
+        $audit->update([
+            'pagespeed_data' => $auditData->toArray(),
+        ]);
+
+        $audit->recordStep('fetch_pagespeed', 'completed');
+
         TakeScreenshotsJob::dispatch($this->auditId, $auditData, $this->strategy, $this->lang);
     }
 
@@ -43,6 +49,10 @@ final class FetchPageSpeedJob implements ShouldQueue
         $audit = Audit::find($this->auditId);
 
         if ($audit) {
+            $audit->recordStep('fetch_pagespeed', 'failed', [
+                'error' => $exception?->getMessage() ?? 'Failed to fetch PageSpeed data',
+            ]);
+
             $audit->markAsFailed($exception?->getMessage() ?? 'Failed to fetch PageSpeed data');
         }
     }
