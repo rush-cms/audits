@@ -29,14 +29,6 @@ final class TakeScreenshotsJob implements ShouldQueue
     public function handle(ScreenshotService $screenshotService): void
     {
         $startTime = microtime(true);
-
-        Log::channel('audits')->info('Job started', [
-            'job' => 'TakeScreenshotsJob',
-            'audit_id' => $this->auditId,
-            'url' => (string) $this->auditData->targetUrl,
-            'attempt' => $this->attempts(),
-        ]);
-
         $audit = Audit::findOrFail($this->auditId);
 
         try {
@@ -84,7 +76,7 @@ final class TakeScreenshotsJob implements ShouldQueue
                     'duration_ms' => $duration,
                 ]);
             } else {
-                Log::channel('audits')->info('Screenshots captured successfully', [
+                Log::channel('audits')->info('Screenshots captured', [
                     'audit_id' => $this->auditId,
                     'desktop_size' => $result['desktop'] ? strlen($result['desktop']) : 0,
                     'mobile_size' => $result['mobile'] ? strlen($result['mobile']) : 0,
@@ -113,11 +105,6 @@ final class TakeScreenshotsJob implements ShouldQueue
             );
 
             GenerateAuditPdfJob::dispatch($this->auditId, $updatedAuditData, $this->strategy, $this->lang);
-
-            Log::channel('audits')->info('Next job dispatched', [
-                'audit_id' => $this->auditId,
-                'job' => 'GenerateAuditPdfJob',
-            ]);
         } catch (Throwable $e) {
             $duration = round((microtime(true) - $startTime) * 1000);
 

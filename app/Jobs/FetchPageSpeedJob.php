@@ -29,15 +29,6 @@ final class FetchPageSpeedJob implements ShouldQueue
     public function handle(PageSpeedService $pageSpeedService): void
     {
         $startTime = microtime(true);
-
-        Log::channel('audits')->info('Job started', [
-            'job' => 'FetchPageSpeedJob',
-            'audit_id' => $this->auditId,
-            'url' => $this->url,
-            'strategy' => $this->strategy,
-            'attempt' => $this->attempts(),
-        ]);
-
         $audit = Audit::findOrFail($this->auditId);
         $audit->markAsProcessing();
 
@@ -54,7 +45,7 @@ final class FetchPageSpeedJob implements ShouldQueue
 
             $duration = round((microtime(true) - $startTime) * 1000);
 
-            Log::channel('audits')->info('PageSpeed data fetched successfully', [
+            Log::channel('audits')->info('PageSpeed data fetched', [
                 'audit_id' => $this->auditId,
                 'url' => $this->url,
                 'score' => $auditData->score,
@@ -62,11 +53,6 @@ final class FetchPageSpeedJob implements ShouldQueue
             ]);
 
             TakeScreenshotsJob::dispatch($this->auditId, $auditData, $this->strategy, $this->lang);
-
-            Log::channel('audits')->info('Next job dispatched', [
-                'audit_id' => $this->auditId,
-                'job' => 'TakeScreenshotsJob',
-            ]);
         } catch (Throwable $e) {
             $duration = round((microtime(true) - $startTime) * 1000);
 

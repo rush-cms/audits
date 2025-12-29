@@ -32,15 +32,6 @@ final class GenerateAuditPdfJob implements ShouldQueue
         WebhookDispatcherService $webhookDispatcher,
     ): void {
         $startTime = microtime(true);
-
-        Log::channel('audits')->info('Job started', [
-            'job' => 'GenerateAuditPdfJob',
-            'audit_id' => $this->auditId,
-            'url' => (string) $this->auditData->targetUrl,
-            'score' => $this->auditData->score->toPercentage(),
-            'attempt' => $this->attempts(),
-        ]);
-
         $audit = Audit::findOrFail($this->auditId);
 
         try {
@@ -48,14 +39,7 @@ final class GenerateAuditPdfJob implements ShouldQueue
             $pdfUrl = $pdfGenerator->getPublicUrl($pdfPath);
 
             $pdfSize = file_exists($pdfPath) ? filesize($pdfPath) : 0;
-            $pdfDuration = round((microtime(true) - $startTime) * 1000);
-
-            Log::channel('audits')->info('PDF generated successfully', [
-                'audit_id' => $this->auditId,
-                'pdf_path' => $pdfPath,
-                'pdf_size' => $pdfSize,
-                'duration_ms' => $pdfDuration,
-            ]);
+            $duration = round((microtime(true) - $startTime) * 1000);
 
             $metrics = [
                 'lcp' => $this->auditData->lcp->format(),
@@ -74,7 +58,8 @@ final class GenerateAuditPdfJob implements ShouldQueue
             Log::channel('audits')->info('Audit completed', [
                 'audit_id' => $this->auditId,
                 'score' => $this->auditData->score->toPercentage(),
-                'total_duration_ms' => round((microtime(true) - $startTime) * 1000),
+                'pdf_size' => $pdfSize,
+                'duration_ms' => $duration,
             ]);
 
             $webhookDispatcher->dispatch($audit, $pdfUrl);
