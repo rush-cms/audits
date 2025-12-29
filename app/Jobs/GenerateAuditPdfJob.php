@@ -14,6 +14,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Middleware\RateLimited;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 final class GenerateAuditPdfJob implements ShouldQueue
@@ -67,6 +68,8 @@ final class GenerateAuditPdfJob implements ShouldQueue
                 metrics: $metrics,
                 pdfPath: $pdfPath,
             );
+
+            $this->deleteScreenshotsIfConfigured();
 
             Log::channel('audits')->info('Audit completed', [
                 'audit_id' => $this->auditId,
@@ -151,5 +154,31 @@ final class GenerateAuditPdfJob implements ShouldQueue
     public function tries(): int
     {
         return (int) config('audits.job_max_attempts', 3);
+    }
+
+    private function deleteScreenshotsIfConfigured(): void
+    {
+        if (! config('audits.screenshots.delete_after_pdf', true)) {
+            return;
+        }
+
+        $deleted = 0;
+
+        if ($this->auditData->desktopScreenshot && file_exists($this->auditData->desktopScreenshot)) {
+            unlink($this->auditData->desktopScreenshot);
+            $deleted++;
+        }
+
+        if ($this->auditData->mobileScreenshot && file_exists($this->auditData->mobileScreenshot)) {
+            unlink($this->auditData->mobileScreenshot);
+            $deleted++;
+        }
+
+        if ($deleted > 0) {
+            Log::channel('audits')->debug('Screenshots deleted after PDF generation', [
+                'audit_id' => $this->auditId,
+                'deleted_count' => $deleted,
+            ]);
+        }
     }
 }
