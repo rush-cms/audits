@@ -16,8 +16,6 @@ final class GenerateAuditPdfJob implements ShouldQueue
 {
     use Queueable;
 
-    public int $tries = 2;
-
     public int $timeout = 120;
 
     public function __construct(
@@ -64,5 +62,20 @@ final class GenerateAuditPdfJob implements ShouldQueue
 
             $audit->markAsFailed($exception?->getMessage() ?? 'Failed to generate PDF');
         }
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        $base = (int) config('audits.job_backoff_base', 30);
+
+        return [$base, $base * 2];
+    }
+
+    public function tries(): int
+    {
+        return (int) config('audits.job_max_attempts', 3);
     }
 }

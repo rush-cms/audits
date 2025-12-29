@@ -15,8 +15,6 @@ final class TakeScreenshotsJob implements ShouldQueue
 {
     use Queueable;
 
-    public int $tries = 1;
-
     public int $timeout = 120;
 
     public function __construct(
@@ -107,5 +105,20 @@ final class TakeScreenshotsJob implements ShouldQueue
 
             GenerateAuditPdfJob::dispatch($this->auditId, $updatedAuditData, $this->strategy, $this->lang);
         }
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        $base = (int) config('audits.job_backoff_base', 30);
+
+        return [$base, $base * 2];
+    }
+
+    public function tries(): int
+    {
+        return (int) config('audits.job_max_attempts', 3);
     }
 }

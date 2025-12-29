@@ -35,6 +35,10 @@ return [
 
     'failed_jobs_retention_days' => (int) env('AUDITS_FAILED_JOBS_RETENTION_DAYS', 30),
 
+    'job_max_attempts' => (int) env('AUDITS_JOB_MAX_ATTEMPTS', 3),
+
+    'job_backoff_base' => (int) env('AUDITS_JOB_BACKOFF_BASE', 30),
+
     'browsershot' => [
         'node_binary' => env('BROWSERSHOT_NODE_BINARY', '/usr/bin/node'),
         'npm_binary' => env('BROWSERSHOT_NPM_BINARY', '/usr/bin/npm'),

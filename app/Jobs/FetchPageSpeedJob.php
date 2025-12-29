@@ -15,8 +15,6 @@ final class FetchPageSpeedJob implements ShouldQueue
 {
     use Queueable;
 
-    public int $tries = 2;
-
     public int $timeout = 90;
 
     public function __construct(
@@ -42,6 +40,21 @@ final class FetchPageSpeedJob implements ShouldQueue
         $audit->recordStep('fetch_pagespeed', 'completed');
 
         TakeScreenshotsJob::dispatch($this->auditId, $auditData, $this->strategy, $this->lang);
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        $base = (int) config('audits.job_backoff_base', 30);
+
+        return [$base, $base * 2];
+    }
+
+    public function tries(): int
+    {
+        return (int) config('audits.job_max_attempts', 3);
     }
 
     public function failed(?Throwable $exception): void
