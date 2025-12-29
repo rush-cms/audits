@@ -7,6 +7,14 @@
                 "/home/rafhael/www/html/rush-cms/site-audits/artisan",
                 "boost:mcp"
             ]
+        },
+        "Rush CMS - AFFiNE": {
+            "type": "streamable-http",
+            "url": "https://docs.rafhael.com.br/api/workspaces/80daffca-8406-4d4f-84ad-9b82ac62d71e/mcp",
+            "note": "Read docs from AFFiNE workspace",
+            "headers": {
+                "Authorization": "Bearer ut_adf4fc540464aa62a72c6e5b69fdd97cbda86"
+            }
         }
     }
 }

@@ -14,7 +14,9 @@
                 Preview Mode - Edit audit.blade.php to see changes
             </span>
         </div>
-        @include('reports.audit-content', ['audit' => $audit])
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            @include('reports.audit-content', ['audit' => $audit])
+        </div>
     </div>
 </body>
 </html>
