@@ -61,7 +61,7 @@ final class HealthCheckService
         try {
             $startTime = microtime(true);
             $key = 'health_check_'.time();
-            Redis::set($key, 'test', 'EX', 5);
+            Redis::setex($key, 5, 'test');
             $value = Redis::get($key);
             Redis::del($key);
             $duration = (microtime(true) - $startTime) * 1000;
@@ -157,7 +157,7 @@ final class HealthCheckService
             $total = disk_total_space($path);
             $free = disk_free_space($path);
 
-            if ($total === false || $free === false || $total === 0) {
+            if ($total === false || $free === false || $total == 0) {
                 return 0;
             }
 
