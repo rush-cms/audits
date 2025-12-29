@@ -26,6 +26,8 @@ return [
         'retention_days' => (int) env('AUDITS_RETENTION_DAYS', 7),
     ],
 
+    'idempotency_window' => (int) env('AUDITS_IDEMPOTENCY_WINDOW', 60),
+
     'browsershot' => [
         'node_binary' => env('BROWSERSHOT_NODE_BINARY', '/usr/bin/node'),
         'npm_binary' => env('BROWSERSHOT_NPM_BINARY', '/usr/bin/npm'),
