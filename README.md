@@ -25,10 +25,13 @@ Ideally used with **n8n** or other automation tools to ingest PageSpeed API data
 * **Whitelabel Ready:** Customize logos, brand names, CTA links, and more via config
 * **Asynchronous Processing:** Heavy PDF generation happens in the background via Queues
 * **Webhook Callbacks:** Receive a ping with the PDF URL as soon as it's ready
+* **Webhook Signatures:** HMAC-SHA256 signatures for webhook authenticity verification
 * **Audit Persistence:** All audits stored in database with status tracking (pending, processing, completed, failed)
 * **Idempotency Support:** Prevents duplicate audits within configurable time windows
 * **Smart Pruning:** Auto-cleanup of old PDF files to save storage
 * **Token Authentication:** Built-in console commands to manage API clients
+* **Rate Limiting:** Configurable per-token and global rate limits with Redis
+* **SSRF Protection:** Blocks private networks and localhost in production
 * **Multi-language Support:** English, Portuguese (BR), and Spanish
 * **Screenshot Capture:** Automatic desktop & mobile screenshots with device mockup frames
 * **SEO & Accessibility Audits:** Optional sections with detailed issue reports
@@ -105,6 +108,12 @@ BROWSERSHOT_CHROME_PATH="/usr/bin/google-chrome"
 | `AUDITS_RETENTION_DAYS` | `7` | Days to keep PDF files before pruning |
 | `AUDITS_IDEMPOTENCY_WINDOW` | `60` | Minutes to prevent duplicate audits |
 | `AUDITS_WEBHOOK_TIMEOUT` | `30` | Webhook timeout in seconds |
+| `AUDITS_WEBHOOK_SECRET` | `null` | Secret for webhook HMAC signatures |
+| `AUDITS_BLOCKED_DOMAINS` | `null` | Comma-separated blocked domains |
+| `AUDITS_RATE_LIMIT_PER_MINUTE` | `60` | Requests per minute per token |
+| `AUDITS_RATE_LIMIT_PER_HOUR` | `500` | Requests per hour per token |
+| `AUDITS_RATE_LIMIT_PER_DAY` | `2000` | Requests per day per token |
+| `AUDITS_RATE_LIMIT_GLOBAL_PER_MINUTE` | `200` | Global requests per minute |
 | `PAGESPEED_API_KEY` | `null` | Google PageSpeed API key |
 
 ## API Reference
@@ -115,6 +124,101 @@ All requests require a Bearer Token:
 ```
 Authorization: Bearer <your-token>
 ```
+
+### Rate Limiting
+
+API requests are rate-limited per token:
+- **60 requests/minute** (default)
+- **500 requests/hour** (default)
+- **2000 requests/day** (default)
+- **200 requests/minute globally** (all tokens combined)
+
+Rate limit headers are included in all responses:
+```
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 45
+X-RateLimit-Reset: 1704067200
+```
+
+When limit is exceeded, you'll receive a `429 Too Many Requests` response:
+```json
+{
+  "message": "Too many requests. Please try again later.",
+  "retry_after": 32
+}
+```
+
+### Webhook Signatures
+
+If `AUDITS_WEBHOOK_SECRET` is configured, webhooks include HMAC-SHA256 signatures for verification:
+
+**Headers:**
+```
+X-Webhook-Signature: sha256=abc123...
+X-Webhook-Timestamp: 1704067200
+X-Webhook-ID: 20250129120000-a1b2c3d4e5f6g7h8
+```
+
+**Verification (PHP):**
+```php
+$secret = env('AUDITS_WEBHOOK_SECRET');
+$timestamp = $_SERVER['HTTP_X_WEBHOOK_TIMESTAMP'];
+$signature = str_replace('sha256=', '', $_SERVER['HTTP_X_WEBHOOK_SIGNATURE']);
+$payload = file_get_contents('php://input');
+
+$expectedSignature = hash_hmac('sha256', "{$timestamp}.{$payload}", $secret);
+
+if (!hash_equals($expectedSignature, $signature)) {
+    http_response_code(401);
+    exit('Invalid signature');
+}
+
+if (abs(time() - $timestamp) > 300) {
+    http_response_code(401);
+    exit('Timestamp expired');
+}
+```
+
+**Verification (Node.js):**
+```javascript
+const crypto = require('crypto');
+
+const secret = process.env.AUDITS_WEBHOOK_SECRET;
+const timestamp = req.headers['x-webhook-timestamp'];
+const signature = req.headers['x-webhook-signature'].replace('sha256=', '');
+const payload = JSON.stringify(req.body);
+
+const expectedSignature = crypto
+  .createHmac('sha256', secret)
+  .update(`${timestamp}.${payload}`)
+  .digest('hex');
+
+if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+  return res.status(401).json({ error: 'Invalid signature' });
+}
+
+if (Math.abs(Date.now() / 1000 - timestamp) > 300) {
+  return res.status(401).json({ error: 'Timestamp expired' });
+}
+```
+
+### Security & SSRF Protection
+
+In production (`APP_ENV=production`), the service automatically blocks:
+- Private IP ranges (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`)
+- Localhost (`127.0.0.1`, `::1`, `localhost`)
+- Link-local addresses (`169.254.0.0/16` - AWS metadata, etc.)
+- Custom blocked domains (via `AUDITS_BLOCKED_DOMAINS`)
+
+**Example blocked URLs in production:**
+```
+http://localhost:8000/admin          ❌ Blocked
+http://192.168.1.1/                   ❌ Blocked
+http://169.254.169.254/latest/meta-data/ ❌ Blocked (AWS metadata)
+https://example.com                   ✅ Allowed
+```
+
+In local/development (`APP_ENV=local`), SSRF protection is **disabled** to allow testing against local services.
 
 ### Submit Scan
 
