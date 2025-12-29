@@ -118,6 +118,22 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'audits' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/audits.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => env('LOG_AUDITS_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
+        'webhooks' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/webhooks.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => env('LOG_WEBHOOKS_DAYS', 7),
+            'replace_placeholders' => true,
+        ],
+
         'null' => [
             'driver' => 'monolog',
             'handler' => NullHandler::class,

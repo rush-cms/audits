@@ -18,11 +18,18 @@ use Illuminate\Database\Eloquent\Model;
  * @property array<string, string>|null $metrics
  * @property string|null $pdf_path
  * @property string|null $error_message
+ * @property array<string, mixed>|null $error_context
  * @property array<string, mixed>|null $pagespeed_data
  * @property array<string, mixed>|null $screenshots_data
  * @property array<string, mixed>|null $processing_steps
  * @property \Illuminate\Support\Carbon|null $last_attempt_at
  * @property \Illuminate\Support\Carbon|null $completed_at
+ * @property \Illuminate\Support\Carbon|null $webhook_delivered_at
+ * @property int|null $webhook_status
+ * @property int $webhook_attempts
+ * @property int|null $created_by_token_id
+ * @property string|null $created_by_ip
+ * @property string|null $user_agent
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  */
@@ -45,11 +52,18 @@ final class Audit extends Model
         'metrics',
         'pdf_path',
         'error_message',
+        'error_context',
         'pagespeed_data',
         'screenshots_data',
         'processing_steps',
         'last_attempt_at',
         'completed_at',
+        'webhook_delivered_at',
+        'webhook_status',
+        'webhook_attempts',
+        'created_by_token_id',
+        'created_by_ip',
+        'user_agent',
     ];
 
     /**
@@ -59,11 +73,13 @@ final class Audit extends Model
     {
         return [
             'metrics' => 'array',
+            'error_context' => 'array',
             'pagespeed_data' => 'array',
             'screenshots_data' => 'array',
             'processing_steps' => 'array',
             'last_attempt_at' => 'datetime',
             'completed_at' => 'datetime',
+            'webhook_delivered_at' => 'datetime',
         ];
     }
 
@@ -89,11 +105,15 @@ final class Audit extends Model
         ]);
     }
 
-    public function markAsFailed(string $errorMessage): void
+    /**
+     * @param  array<string, mixed>|null  $errorContext
+     */
+    public function markAsFailed(string $errorMessage, ?array $errorContext = null): void
     {
         $this->update([
             'status' => 'failed',
             'error_message' => $errorMessage,
+            'error_context' => $errorContext,
             'last_attempt_at' => now(),
         ]);
     }
