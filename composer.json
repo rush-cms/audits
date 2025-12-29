@@ -3,7 +3,7 @@
     "name": "rush-cms/audits",
     "type": "project",
     "description": "Rush CMS Audits Microservice",
-    "license": "AGPLv3",
+    "license": "MIT",
     "require": {
         "php": "^8.2",
         "laravel/framework": "^12.0",

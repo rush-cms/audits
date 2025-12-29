@@ -6,7 +6,7 @@
   [![Laravel 12](https://img.shields.io/badge/Laravel-12-FF2D20?style=flat&logo=laravel&logoColor=white)](https://laravel.com)
   [![PHPStan Level 8](https://img.shields.io/badge/PHPStan-Level%208-4F5B93?style=flat&logo=php&logoColor=white)](https://phpstan.org)
   [![Tests Passing](https://img.shields.io/badge/Tests-24%20passed-00C853?style=flat&logo=pest&logoColor=white)](https://pestphp.com)
-  [![License AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue?style=flat)](LICENSE)
+  [![License MIT](https://img.shields.io/badge/License-MIT-blue?style=flat)](LICENSE)
 
   **[rushcms.com/audits](https://rushcms.com/audits)**
 </div>
@@ -361,4 +361,4 @@ The PDF report includes:
 
 ## License
 
-This project is open-sourced software licensed under the **[GNU Affero General Public License v3.0 (AGPLv3)](LICENSE)**.
+This project is open-sourced software licensed under the **[MIT License](LICENSE)**.
