@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Data\AuditData;
+use App\Models\Audit;
 use App\Services\ScreenshotService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Throwable;
 
 final class TakeScreenshotsJob implements ShouldQueue
 {
@@ -18,7 +20,9 @@ final class TakeScreenshotsJob implements ShouldQueue
     public int $timeout = 120;
 
     public function __construct(
+        public readonly string $auditId,
         public readonly AuditData $auditData,
+        public readonly string $strategy = 'mobile',
         public readonly string $lang = 'en',
     ) {}
 
@@ -44,6 +48,15 @@ final class TakeScreenshotsJob implements ShouldQueue
             screenshotError: $result['error'],
         );
 
-        GenerateAuditPdfJob::dispatch($updatedAuditData, $this->lang);
+        GenerateAuditPdfJob::dispatch($this->auditId, $updatedAuditData, $this->strategy, $this->lang);
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        $audit = Audit::find($this->auditId);
+
+        if ($audit) {
+            $audit->markAsFailed($exception?->getMessage() ?? 'Failed to capture screenshots');
+        }
     }
 }

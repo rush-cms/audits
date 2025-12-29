@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Data\AuditData;
+use App\Models\Audit;
 use App\Services\PageSpeedService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Throwable;
 
 final class FetchPageSpeedJob implements ShouldQueue
 {
@@ -18,17 +20,30 @@ final class FetchPageSpeedJob implements ShouldQueue
     public int $timeout = 90;
 
     public function __construct(
+        public readonly string $auditId,
         public readonly string $url,
-        public readonly string $lang = 'en',
         public readonly string $strategy = 'mobile',
+        public readonly string $lang = 'en',
     ) {}
 
     public function handle(PageSpeedService $pageSpeedService): void
     {
+        $audit = Audit::findOrFail($this->auditId);
+        $audit->markAsProcessing();
+
         $lighthouseResult = $pageSpeedService->fetchLighthouseResult($this->url, $this->strategy);
 
         $auditData = AuditData::fromLighthouseResult($lighthouseResult);
 
-        TakeScreenshotsJob::dispatch($auditData, $this->lang);
+        TakeScreenshotsJob::dispatch($this->auditId, $auditData, $this->strategy, $this->lang);
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        $audit = Audit::find($this->auditId);
+
+        if ($audit) {
+            $audit->markAsFailed($exception?->getMessage() ?? 'Failed to fetch PageSpeed data');
+        }
     }
 }

@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Data\AuditData;
+use App\Models\Audit;
 use App\Services\PdfGeneratorService;
 use App\Services\WebhookDispatcherService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Throwable;
 
 final class GenerateAuditPdfJob implements ShouldQueue
 {
@@ -19,7 +21,9 @@ final class GenerateAuditPdfJob implements ShouldQueue
     public int $timeout = 120;
 
     public function __construct(
+        public readonly string $auditId,
         public readonly AuditData $auditData,
+        public readonly string $strategy = 'mobile',
         public readonly string $lang = 'en',
     ) {}
 
@@ -30,6 +34,29 @@ final class GenerateAuditPdfJob implements ShouldQueue
         $pdfPath = $pdfGenerator->generate($this->auditData, $this->lang);
         $pdfUrl = $pdfGenerator->getPublicUrl($pdfPath);
 
-        $webhookDispatcher->dispatch($this->auditData, $pdfUrl);
+        $audit = Audit::findOrFail($this->auditId);
+
+        $metrics = [
+            'lcp' => $this->auditData->lcp->format(),
+            'fcp' => $this->auditData->fcp->format(),
+            'cls' => $this->auditData->cls->format(),
+        ];
+
+        $audit->markAsCompleted(
+            score: $this->auditData->score->toPercentage(),
+            metrics: $metrics,
+            pdfPath: $pdfPath,
+        );
+
+        $webhookDispatcher->dispatch($audit, $pdfUrl, $this->strategy, $this->lang);
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        $audit = Audit::find($this->auditId);
+
+        if ($audit) {
+            $audit->markAsFailed($exception?->getMessage() ?? 'Failed to generate PDF');
+        }
     }
 }
