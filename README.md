@@ -1,6 +1,17 @@
-# Rush CMS Audits Microservice
+<div align="center">
+  <img src=".github/assets/site-audits-banner.webp" alt="Rush CMS Site Audits Banner" width="100%">
 
-> **[audits.rushcms.com](https://audits.rushcms.com)**
+  # Rush CMS Audits Microservice
+
+  [![Laravel 12](https://img.shields.io/badge/Laravel-12-FF2D20?style=flat&logo=laravel&logoColor=white)](https://laravel.com)
+  [![PHPStan Level 8](https://img.shields.io/badge/PHPStan-Level%208-4F5B93?style=flat&logo=php&logoColor=white)](https://phpstan.org)
+  [![Tests Passing](https://img.shields.io/badge/Tests-24%20passed-00C853?style=flat&logo=pest&logoColor=white)](https://pestphp.com)
+  [![License AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue?style=flat)](LICENSE)
+
+  **[rushcms.com/site-audits](https://rushcms.com/site-audits)**
+</div>
+
+<br>
 
 A standalone, headless microservice dedicated to generating high-fidelity performance reports (Lighthouse/PageSpeed) in PDF format. Designed to be **whitelabel**, **asynchronous**, and **webhook-oriented**.
 
