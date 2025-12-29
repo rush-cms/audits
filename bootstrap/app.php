@@ -17,7 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('audits:prune-orphaned-screenshots')->daily()->at('03:00');
     })
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->api(prepend: [
+            \App\Http\Middleware\ValidateRequestSize::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

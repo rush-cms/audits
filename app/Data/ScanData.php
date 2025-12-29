@@ -30,9 +30,9 @@ final class ScanData extends Data
     public static function rules(): array
     {
         return [
-            'url' => ['required', 'string', 'url'],
-            'lang' => ['required', 'string', 'in:en,pt_BR,es'],
-            'strategy' => ['required', 'string', 'in:mobile,desktop'],
+            'url' => ['required', 'string', 'url', 'max:2048'],
+            'lang' => ['required', 'string', 'in:en,pt_BR,es', 'max:10'],
+            'strategy' => ['required', 'string', 'in:mobile,desktop', 'max:10'],
         ];
     }
 
