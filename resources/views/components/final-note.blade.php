@@ -35,7 +35,7 @@
         {{ $config['label'] }}
     </span>
 
-    <span class="text-slate-500 max-w-lg text-center">
+    <span class="print:text-sm text-slate-500 max-w-lg text-center">
         {{ $result }}
     </span>
 </div>

@@ -10,6 +10,8 @@ return [
     'accessibility' => 'Acessibilidade',
     'no_issues' => 'Nenhum problema encontrado',
     'screenshot_unavailable' => 'Prévia do site indisponível - o site pode ter restrições de segurança',
+    'report' => 'Relatório',
+    'cta_text' => 'Fale Comigo',
 
     'lcp' => 'LCP',
     'lcp_full' => 'Largest Contentful Paint',
@@ -30,7 +32,7 @@ return [
     'average' => 'Médio',
 
     'what_means' => 'O que essas métricas significam?',
-    'powered_by' => 'Desenvolvido por',
+    'powered_by' => 'Powered by',
     'audit_id' => 'ID da Auditoria',
     'data_from' => 'Dados do Google PageSpeed Insights',
 
@@ -47,5 +49,29 @@ return [
         'cls_very_poor' => 'Botões que se movem = clientes frustrados. Seu site está "pulando" durante o carregamento, fazendo visitantes clicarem no lugar errado. Isso gera desconfiança e abandono imediato. Sites instáveis convertem até 70% menos',
         'cls_poor' => 'Elementos se movendo na tela irritam visitantes e prejudicam a experiência. Google penaliza sites instáveis no ranqueamento. Você está perdendo posições para concorrentes com sites mais estáveis',
         'cls_excellent' => 'Perfeito! Seu site oferece uma experiência visual estável e profissional',
+    ],
+
+    'closing' => [
+        'critical' => [
+            'headline' => 'Seu site está trabalhando contra você',
+            'body' => 'Não é culpa sua. A maioria dos sites nascem rápidos e vão ficando lentos conforme crescem. O problema é que cada segundo perdido representa oportunidades reais escorregando pelos dedos. Enquanto você lê isso, visitantes já desistiram do seu site e foram comprar do concorrente.',
+            'stats' => 'Sites com performance ruim como a atual convertem até 73% menos que sites otimizados. Se você recebe 1.000 visitantes/mês, está literalmente jogando fora centenas de potenciais clientes.',
+            'solution' => 'A boa notícia? Performance não é sorte, é técnica. E diferente de marketing que demora meses para dar resultado, otimização de performance entrega resultados imediatos.',
+            'cta' => 'Quer descobrir quanto dinheiro você está deixando na mesa? Vamos conversar sem compromisso.',
+        ],
+        'medium' => [
+            'headline' => 'Você está quase lá',
+            'body' => 'Seu site não está ruim, mas está na zona de perigo. Sabe aquela sensação de "poderia estar melhor"? Seus visitantes sentem isso também. E no mundo digital, "quase bom" significa "ainda não comprei" ou "ainda não contratei".',
+            'stats' => 'A diferença entre um site mediano e um site rápido pode significar 40% mais conversões. É literalmente a diferença entre crescer ou estagnar.',
+            'solution' => 'Você não precisa refazer tudo. Com ajustes estratégicos nas áreas certas (destacadas em vermelho e laranja acima), seu site sai da média e entra no time dos que realmente vendem.',
+            'cta' => 'Vamos identificar os 3 ajustes que vão trazer o maior impacto no seu negócio?',
+        ],
+        'good' => [
+            'headline' => 'Você está no caminho certo',
+            'body' => 'Parabéns por ter um site rápido! Você já está na frente de 90% dos concorrentes. Mas no mercado digital, ficar parado é retroceder. Sites e tecnologias evoluem, e o que é rápido hoje pode ficar lento amanhã.',
+            'stats' => null,
+            'solution' => 'Continue monitorando mensalmente. Pequenas mudanças (novo plugin, mais imagens, mais tráfego) podem derrubar a performance sem você perceber.',
+            'cta' => 'Quer garantir que seu site continue sendo referência? Vamos estruturar um acompanhamento estratégico.',
+        ],
     ],
 ];

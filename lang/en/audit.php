@@ -10,6 +10,8 @@ return [
     'accessibility' => 'Accessibility',
     'no_issues' => 'No issues found',
     'screenshot_unavailable' => 'Website preview unavailable - the site may have security restrictions',
+    'report' => 'Report',
+    'cta_text' => 'Talk to Me',
 
     'lcp' => 'LCP',
     'lcp_full' => 'Largest Contentful Paint',
@@ -47,5 +49,29 @@ return [
         'cls_very_poor' => 'Buttons that move = frustrated customers. Your site is "jumping" during loading, making visitors click in the wrong place. This generates distrust and immediate abandonment. Unstable sites convert up to 70% less',
         'cls_poor' => 'Elements moving on screen irritate visitors and hurt the experience. Google penalizes unstable sites in ranking. You are losing positions to competitors with more stable sites',
         'cls_excellent' => 'Perfect! Your site offers a stable and professional visual experience',
+    ],
+
+    'closing' => [
+        'critical' => [
+            'headline' => 'Your site is working against you',
+            'body' => 'It\'s not your fault. Most sites start fast and slow down as they grow. The problem is that every lost second represents real opportunities slipping through your fingers. While you read this, visitors have already given up on your site and gone to buy from competitors.',
+            'stats' => 'Sites with poor performance like yours convert up to 73% less than optimized sites. If you get 1,000 visitors/month, you\'re literally throwing away hundreds of potential customers.',
+            'solution' => 'The good news? Performance isn\'t luck, it\'s technique. And unlike marketing that takes months to show results, performance optimization delivers immediate results.',
+            'cta' => 'Want to find out how much money you\'re leaving on the table? Let\'s talk without commitment.',
+        ],
+        'medium' => [
+            'headline' => 'You\'re almost there',
+            'body' => 'Your site isn\'t bad, but it\'s in the danger zone. You know that feeling of "could be better"? Your visitors feel it too. And in the digital world, "almost good" means "haven\'t bought yet" or "haven\'t hired yet".',
+            'stats' => 'The difference between an average site and a fast site can mean 40% more conversions. It\'s literally the difference between growing or stagnating.',
+            'solution' => 'You don\'t need to rebuild everything. With strategic adjustments in the right areas (highlighted in red and orange above), your site leaves average and joins the team of those that really sell.',
+            'cta' => 'Let\'s identify the 3 adjustments that will bring the biggest impact to your business?',
+        ],
+        'good' => [
+            'headline' => 'You\'re on the right track',
+            'body' => 'Congratulations on having a fast site! You\'re already ahead of 90% of competitors. But in the digital market, standing still is going backwards. Sites and technologies evolve, and what\'s fast today may be slow tomorrow.',
+            'stats' => null,
+            'solution' => 'Keep monitoring monthly. Small changes (new plugin, more images, more traffic) can crash performance without you noticing.',
+            'cta' => 'Want to ensure your site continues to be a reference? Let\'s set up strategic monitoring.',
+        ],
     ],
 ];

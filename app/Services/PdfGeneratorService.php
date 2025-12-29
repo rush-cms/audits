@@ -37,6 +37,7 @@ final class PdfGeneratorService
             ->setNpmBinary(config('audits.browsershot.npm_binary'))
             ->setChromePath(config('audits.browsershot.chrome_path'))
             ->noSandbox()
+            ->emulateMedia('print')
             ->format('A4')
             ->margins(15, 15, 15, 15)
             ->showBackground()

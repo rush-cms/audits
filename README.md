@@ -6,48 +6,49 @@ A standalone, headless microservice dedicated to generating high-fidelity perfor
 
 Ideally used with **n8n** or other automation tools to ingest PageSpeed API data and return professional client-ready PDFs.
 
-> **Documentation:** [docs/README.md](docs/README.md)
+> **Documentation:** [docs/api.md](docs/api.md)
 
 ## Features
 
 * **Headless Architecture:** API-first design with no frontend UI
-* **Whitelabel Ready:** Customize logos, brand names, and footer text via config
+* **Whitelabel Ready:** Customize logos, brand names, CTA links, and more via config
 * **Asynchronous Processing:** Heavy PDF generation happens in the background via Queues
 * **Webhook Callbacks:** Receive a ping with the PDF URL as soon as it's ready
 * **Smart Pruning:** Auto-cleanup of old PDF files to save storage
 * **Token Authentication:** Built-in console commands to manage API clients
+* **Multi-language Support:** English, Portuguese (BR), and Spanish
+* **Screenshot Capture:** Automatic desktop & mobile screenshots with device mockup frames
+* **SEO & Accessibility Audits:** Optional sections with detailed issue reports
+* **Core Web Vitals:** LCP, FCP, CLS with contextual performance messages
 
 ## Tech Stack
 
 * **Core:** Laravel 12 API (Slim setup)
 * **PDF Engine:** Spatie Browsershot (Puppeteer/Chromium)
-* **Charts:** QuickChart.io (No local node chart rendering required)
+* **Image Processing:** Spatie Image (WebP conversion)
 * **Queue:** Redis (Recommended)
 * **Storage:** Local Public Disk / S3
 
 ## Workflow
 
-The service acts as a "middleman" between raw data and a presentation-ready document.
-
-1. **Ingestion:** You send raw JSON from the Google PageSpeed Insights API to `POST /api/v1/scan`.
-    *Tip: Use an n8n node to fetch the Google API data and forward it here.*
-2. **Queue:** The payload is validated and dispatched to `GenerateAuditPdfJob`.
-3. **Processing:**
-    * Extracts key metrics (LCP, FCP, CLS, Score).
-    * Renders a Blade View styled with Tailwind CSS (Whitelabel).
-    * Converts HTML to PDF using a headless Chrome instance.
-    * Uploads the file to public storage.
-4. **Callback:** The system sends a POST request to your `AUDITS_WEBHOOK_RETURN_URL` with the final PDF URL.
+1. **Ingestion:** Send a URL or raw PageSpeed JSON to `POST /api/v1/scan`
+2. **PageSpeed Fetch:** If URL provided, fetches Performance, SEO & Accessibility data
+3. **Screenshot Capture:** Takes desktop (1920x1080) and mobile (375x812) screenshots
+4. **Image Optimization:** Converts screenshots to WebP (600px width)
+5. **PDF Generation:** Renders Blade views with Tailwind CSS, converts to PDF
+6. **Callback:** Sends POST request to your webhook URL with the PDF link
 
 ## Environment Configuration
+
 ```bash
 cp .env.example .env
-``` 
+```
 
 Edit the `.env` file to configure:
 
 ```ini
 APP_URL=https://audits.rushcms.com
+APP_TIMEZONE="America/Sao_Paulo"
 
 # Service Logic
 AUDITS_WEBHOOK_RETURN_URL="https://your-main-app.com/api/webhook/audit-ready"
@@ -56,103 +57,139 @@ AUDITS_RETENTION_DAYS=7
 
 # Branding (Whitelabel)
 AUDITS_BRAND_NAME="Rush CMS"
-AUDITS_LOGO_URL="https://rushcms.com/assets/logo-dark.png"
+AUDITS_LOGO_PATH="rush-cms-logo.png"
+
+# Report Settings
+AUDITS_DATE_FORMAT="d/m/Y H:i"
+AUDITS_SHOW_SEO=false
+AUDITS_SHOW_ACCESSIBILITY=false
+AUDITS_CTA_URL="https://wa.me/5511999999999"
+
+# PageSpeed Insights API (optional, increases rate limits)
+PAGESPEED_API_KEY=
 
 # Browsershot / Puppeteer (Critical for Linux/Docker)
-# Verify paths with: which node / which google-chrome
 BROWSERSHOT_NODE_BINARY="/usr/bin/node"
 BROWSERSHOT_NPM_BINARY="/usr/bin/npm"
 BROWSERSHOT_CHROME_PATH="/usr/bin/google-chrome"
 ```
 
+## Configuration Reference
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `APP_TIMEZONE` | `America/Sao_Paulo` | Timezone for date display |
+| `AUDITS_BRAND_NAME` | `Rush CMS` | Brand name in header/footer |
+| `AUDITS_LOGO_PATH` | `null` | Path to logo in public folder |
+| `AUDITS_DATE_FORMAT` | `d/m/Y H:i` | PHP date format for header |
+| `AUDITS_SHOW_SEO` | `false` | Show SEO audit section |
+| `AUDITS_SHOW_ACCESSIBILITY` | `false` | Show Accessibility section |
+| `AUDITS_CTA_URL` | WhatsApp link | Call-to-action button URL |
+| `PAGESPEED_API_KEY` | `null` | Google PageSpeed API key |
+
 ## API Reference
 
 ### Authentication
-All requests require a Bearer Token.
-`Authorization: Bearer <your-token>`
 
-### 1. Submit Scan
-Queues a new PDF generation job.
+All requests require a Bearer Token:
+```
+Authorization: Bearer <your-token>
+```
 
-* **Endpoint:** `POST /api/v1/scan`
-* **Headers:** `Content-Type: application/json`
-* **Body:** The **raw JSON object** directly from Google PageSpeed Insights.
+### Submit Scan
 
-**Response:**
+**Endpoint:** `POST /api/v1/scan`
 
+**Option 1: URL-based (Recommended)**
 ```json
 {
-    "message": "Audit queued",
-    "audit_id": "98a3b2-..."
+  "url": "https://example.com",
+  "lang": "pt_BR",
+  "strategy": "mobile"
 }
 ```
 
-### 2. Webhook Callback (Incoming)
-When processing is done, your `AUDITS_WEBHOOK_RETURN_URL` will receive:
-
+**Option 2: Payload-based**
 ```json
 {
+  "lighthouseResult": { ... }
+}
+```
+
+**Response:** `202 Accepted`
+```json
+{
+  "message": "Audit queued",
   "audit_id": "98a3b2-...",
-  "status": "completed",
-  "target_url": "https://client-site.com",
-  "pdf_url": "https://audits.rushcms.com/storage/reports/98a3b2.pdf",
-  "score": 85,
-  "metrics": {
-    "lcp": "2.1s",
-    "fcp": "1.0s",
-    "cls": "0.05"
-  }
+  "lang": "pt_BR",
+  "strategy": "mobile"
 }
 ```
 
-## Console Management
-Since this is a headless service, use custom Artisan commands to manage it.
+### Get Stats
 
-### Manage Clients (Auth)
-Create tokens for your main application or external clients.
+**Endpoint:** `GET /api/v1/stats`
 
-```bash
-# Syntax: php artisan audit:create-token <name>
-php artisan audit:create-token "Main App Production"
-
-# Output: Token created: 1|laravel_sanctum_token...
-# (Save this token immediately)
+```json
+{
+  "minute": 3,
+  "hour": 45,
+  "day": 127,
+  "month": 1542
+}
 ```
 
-### Maintenance
-```bash
-# Verify if Puppeteer can launch Chrome
-php artisan audit:check-browser
+## Console Commands
 
-# Force delete old PDFs (Runs via Schedule automatically)
+```bash
+# Create API token
+php artisan audit:create-token "Client Name"
+
+# Test PDF generation (no API calls)
+php artisan test:pdf --lang=pt_BR
+
+# Prune old PDFs
 php artisan audit:prune-pdfs
+
+# Check browser setup
+php artisan audit:check-browser
 ```
 
 ## Deployment
 
-### Docker / System Requirements
-This project relies on **Puppeteer**, which requires a valid Chromium/Chrome instance and Node.js.
+### System Requirements
 
-1. **Dockerfile:** Ensure your image installs Chromium dependencies (e.g., `libnss3`, `libatk`, `libx11`, etc.) or use a pre-built image like `keyer/laravel-browsershot`.
-2. **Queues:** A worker is **mandatory**.
+- PHP 8.4+
+- Node.js 18+
+- Chromium/Chrome
+- Redis (for queues)
+
+### Queue Worker (Required)
+
 ```bash
-php artisan queue:work --tries=2 --timeout=120
+php artisan queue:work --tries=2 --timeout=180
 ```
 
-3. **Scheduler:** Enable the scheduler to run the auto-pruning task.
+### Scheduler
+
 ```bash
 php artisan schedule:run
 ```
 
-### Whitelabel Customization
-Edit `config/audits.php` or publish the views to customize the PDF layout:
+## Report Components
 
-```bash
-php artisan vendor:publish --tag=audit-views
-```
+The PDF report includes:
+
+1. **Header:** Brand logo + generation timestamp
+2. **Performance Score:** Circular gauge with pass/fail indicator
+3. **Device Mockup:** iPhone 16 + MacBook frames with live screenshots
+4. **Core Web Vitals:** LCP, FCP, CLS cards with progress bars
+5. **Performance Messages:** Contextual feedback based on metrics
+6. **SEO Section:** Score + failed audit list (optional)
+7. **Accessibility Section:** Score + failed audit list (optional)
+8. **Closing CTA:** Dynamic message based on score + WhatsApp button
+9. **Footer:** Brand name, Audit ID, data source
 
 ## License
 
 This project is open-sourced software licensed under the **[GNU Affero General Public License v3.0 (AGPLv3)](LICENSE)**.
-
-The AGPLv3 license ensures that if this software is run over a network (SaaS), the source code must be made available to users.

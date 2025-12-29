@@ -30,6 +30,6 @@
     };
 @endphp
 
-<div class="flex items-center justify-start {{ $colorClasses }}">
+<div class="print:text-xs text-sm xl:text-base flex items-center justify-start {{ $colorClasses }}">
     <p class="leading-relaxed">{{ $message }}</p>
 </div>

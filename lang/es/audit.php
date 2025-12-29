@@ -10,6 +10,8 @@ return [
     'accessibility' => 'Accesibilidad',
     'no_issues' => 'No se encontraron problemas',
     'screenshot_unavailable' => 'Vista previa del sitio no disponible - el sitio puede tener restricciones de seguridad',
+    'report' => 'Informe',
+    'cta_text' => 'Habla Conmigo',
 
     'lcp' => 'LCP',
     'lcp_full' => 'Largest Contentful Paint',
@@ -47,5 +49,29 @@ return [
         'cls_very_poor' => 'Botones que se mueven = clientes frustrados. Tu sitio está "saltando" durante la carga, haciendo que los visitantes hagan clic en el lugar equivocado. Esto genera desconfianza y abandono inmediato. Los sitios inestables convierten hasta 70% menos',
         'cls_poor' => 'Elementos moviéndose en la pantalla irritan a los visitantes y perjudican la experiencia. Google penaliza sitios inestables en el ranking. Estás perdiendo posiciones ante competidores con sitios más estables',
         'cls_excellent' => '¡Perfecto! Tu sitio ofrece una experiencia visual estable y profesional',
+    ],
+
+    'closing' => [
+        'critical' => [
+            'headline' => 'Tu sitio está trabajando en tu contra',
+            'body' => 'No es tu culpa. La mayoría de los sitios nacen rápidos y se vuelven lentos conforme crecen. El problema es que cada segundo perdido representa oportunidades reales escapándose entre los dedos. Mientras lees esto, visitantes ya abandonaron tu sitio y fueron a comprar de la competencia.',
+            'stats' => 'Sitios con performance mala como la actual convierten hasta 73% menos que sitios optimizados. Si recibes 1.000 visitantes/mes, estás literalmente tirando a la basura cientos de potenciales clientes.',
+            'solution' => '¿La buena noticia? Performance no es suerte, es técnica. Y diferente del marketing que demora meses para dar resultado, optimización de performance entrega resultados inmediatos.',
+            'cta' => '¿Quieres descubrir cuánto dinero estás dejando en la mesa? Hablemos sin compromiso.',
+        ],
+        'medium' => [
+            'headline' => 'Estás casi ahí',
+            'body' => 'Tu sitio no está malo, pero está en la zona de peligro. ¿Conoces esa sensación de "podría estar mejor"? Tus visitantes también la sienten. Y en el mundo digital, "casi bueno" significa "aún no compré" o "aún no contraté".',
+            'stats' => 'La diferencia entre un sitio mediano y un sitio rápido puede significar 40% más conversiones. Es literalmente la diferencia entre crecer o estancarse.',
+            'solution' => 'No necesitas rehacer todo. Con ajustes estratégicos en las áreas correctas (destacadas en rojo y naranja arriba), tu sitio sale del promedio y entra al equipo de los que realmente venden.',
+            'cta' => '¿Vamos a identificar los 3 ajustes que traerán el mayor impacto a tu negocio?',
+        ],
+        'good' => [
+            'headline' => 'Vas por el camino correcto',
+            'body' => '¡Felicitaciones por tener un sitio rápido! Ya estás adelante del 90% de los competidores. Pero en el mercado digital, quedarse parado es retroceder. Sitios y tecnologías evolucionan, y lo que es rápido hoy puede ser lento mañana.',
+            'stats' => null,
+            'solution' => 'Continúa monitoreando mensualmente. Pequeños cambios (nuevo plugin, más imágenes, más tráfico) pueden derribar la performance sin que lo notes.',
+            'cta' => '¿Quieres garantizar que tu sitio continúe siendo referencia? Vamos a estructurar un acompañamiento estratégico.',
+        ],
     ],
 ];

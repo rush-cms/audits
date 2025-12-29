@@ -111,8 +111,17 @@ final class ScreenshotService
 
     public function getPublicUrl(string $path): string
     {
-        $filename = basename($path);
+        if (! file_exists($path)) {
+            return '';
+        }
 
-        return url('storage/screenshots/'.$filename);
+        $content = file_get_contents($path);
+        if ($content === false) {
+            return '';
+        }
+
+        $mimeType = mime_content_type($path) ?: 'image/webp';
+
+        return 'data:'.$mimeType.';base64,'.base64_encode($content);
     }
 }

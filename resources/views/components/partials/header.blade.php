@@ -1,4 +1,4 @@
-<div class="bg-slate-800 px-8 py-6">
+<div class="bg-slate-800 px-8 py-6 print:rounded-xl">
     <div class="flex justify-between items-center">
         <div class="flex items-center gap-4">
             @if(config('audits.logo_path'))
@@ -14,7 +14,7 @@
             @endif
         </div>
         <div class="text-slate-400 text-sm">
-            {{ __('audit.generated_at') }} {{ now()->format('M d, Y H:i') }} UTC
+            {{ __('audit.generated_at') }} {{ now()->format(config('audits.report.date_format')) }}
         </div>
     </div>
 </div>

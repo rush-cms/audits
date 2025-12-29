@@ -6,6 +6,13 @@ return [
     'brand_name' => env('AUDITS_BRAND_NAME', 'Rush CMS'),
     'logo_path' => env('AUDITS_LOGO_PATH'),
 
+    'report' => [
+        'date_format' => env('AUDITS_DATE_FORMAT', 'd/m/Y H:i'),
+        'show_seo' => env('AUDITS_SHOW_SEO', false),
+        'show_accessibility' => env('AUDITS_SHOW_ACCESSIBILITY', false),
+        'cta_url' => env('AUDITS_CTA_URL', 'https://wa.me/5511999999999'),
+    ],
+
     'pagespeed' => [
         'api_key' => env('PAGESPEED_API_KEY'),
     ],
