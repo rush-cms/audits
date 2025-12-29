@@ -18,12 +18,27 @@ final class WebhookPayloadData extends Data
         public readonly WebhookMetricsData $metrics,
         public readonly string $strategy,
         public readonly string $lang,
+        public readonly bool $screenshotsIncluded = true,
+        public readonly ?string $screenshotError = null,
     ) {}
 
     public static function fromAudit(Audit $audit, string $pdfUrl): self
     {
         /** @var array<string, string> $metrics */
         $metrics = $audit->metrics ?? [];
+
+        /** @var array<string, mixed>|null $screenshotsData */
+        $screenshotsData = $audit->screenshots_data;
+
+        $screenshotsIncluded = true;
+        $screenshotError = null;
+
+        if ($screenshotsData) {
+            $hasDesktop = ! empty($screenshotsData['desktop']);
+            $hasMobile = ! empty($screenshotsData['mobile']);
+            $screenshotsIncluded = $hasDesktop || $hasMobile;
+            $screenshotError = $screenshotsData['error'] ?? null;
+        }
 
         return new self(
             auditId: $audit->id,
@@ -38,6 +53,8 @@ final class WebhookPayloadData extends Data
             ),
             strategy: $audit->strategy,
             lang: $audit->lang,
+            screenshotsIncluded: $screenshotsIncluded,
+            screenshotError: $screenshotError,
         );
     }
 }

@@ -39,7 +39,23 @@ final class TakeScreenshotsJob implements ShouldQueue
             'screenshots_data' => $result,
         ]);
 
-        $audit->recordStep('take_screenshots', 'completed');
+        $bothFailed = is_null($result['desktop']) && is_null($result['mobile']);
+        $requireScreenshots = (bool) config('audits.require_screenshots', false);
+
+        if ($bothFailed && $requireScreenshots) {
+            $audit->recordStep('take_screenshots', 'failed', [
+                'error' => $result['error'] ?? 'Both screenshots failed',
+            ]);
+
+            $audit->markAsFailed($result['error'] ?? 'Both screenshots failed');
+
+            return;
+        }
+
+        $stepStatus = $bothFailed ? 'completed_with_warnings' : 'completed';
+        $audit->recordStep('take_screenshots', $stepStatus, $bothFailed ? [
+            'warning' => 'Screenshots failed, PDF will be generated without screenshots',
+        ] : null);
 
         $updatedAuditData = new AuditData(
             targetUrl: $this->auditData->targetUrl,
@@ -52,7 +68,7 @@ final class TakeScreenshotsJob implements ShouldQueue
             accessibility: $this->auditData->accessibility,
             desktopScreenshot: $result['desktop'],
             mobileScreenshot: $result['mobile'],
-            screenshotFailed: $result['failed'],
+            screenshotFailed: $bothFailed,
             screenshotError: $result['error'],
         );
 
@@ -63,12 +79,33 @@ final class TakeScreenshotsJob implements ShouldQueue
     {
         $audit = Audit::find($this->auditId);
 
-        if ($audit) {
-            $audit->recordStep('take_screenshots', 'failed', [
-                'error' => $exception?->getMessage() ?? 'Failed to capture screenshots',
-            ]);
+        if (! $audit) {
+            return;
+        }
 
+        $requireScreenshots = (bool) config('audits.require_screenshots', false);
+
+        $audit->recordStep('take_screenshots', 'failed', [
+            'error' => $exception?->getMessage() ?? 'Failed to capture screenshots',
+        ]);
+
+        if ($requireScreenshots) {
             $audit->markAsFailed($exception?->getMessage() ?? 'Failed to capture screenshots');
+        } else {
+            $updatedAuditData = new AuditData(
+                targetUrl: $this->auditData->targetUrl,
+                score: $this->auditData->score,
+                lcp: $this->auditData->lcp,
+                fcp: $this->auditData->fcp,
+                cls: $this->auditData->cls,
+                auditId: $this->auditData->auditId,
+                seo: $this->auditData->seo,
+                accessibility: $this->auditData->accessibility,
+                screenshotFailed: true,
+                screenshotError: $exception?->getMessage(),
+            );
+
+            GenerateAuditPdfJob::dispatch($this->auditId, $updatedAuditData, $this->strategy, $this->lang);
         }
     }
 }
