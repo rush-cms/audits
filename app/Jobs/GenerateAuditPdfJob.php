@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Data\AuditData;
+use App\Exceptions\PdfGenerationException;
 use App\Models\Audit;
 use App\Services\PdfGeneratorService;
 use App\Services\WebhookDispatcherService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 final class GenerateAuditPdfJob implements ShouldQueue
@@ -29,26 +31,77 @@ final class GenerateAuditPdfJob implements ShouldQueue
         PdfGeneratorService $pdfGenerator,
         WebhookDispatcherService $webhookDispatcher,
     ): void {
+        $startTime = microtime(true);
+
+        Log::channel('audits')->info('Job started', [
+            'job' => 'GenerateAuditPdfJob',
+            'audit_id' => $this->auditId,
+            'url' => (string) $this->auditData->targetUrl,
+            'score' => $this->auditData->score->toPercentage(),
+            'attempt' => $this->attempts(),
+        ]);
+
         $audit = Audit::findOrFail($this->auditId);
 
-        $pdfPath = $pdfGenerator->generate($this->auditData, $this->lang);
-        $pdfUrl = $pdfGenerator->getPublicUrl($pdfPath);
+        try {
+            $pdfPath = $pdfGenerator->generate($this->auditData, $this->lang);
+            $pdfUrl = $pdfGenerator->getPublicUrl($pdfPath);
 
-        $metrics = [
-            'lcp' => $this->auditData->lcp->format(),
-            'fcp' => $this->auditData->fcp->format(),
-            'cls' => $this->auditData->cls->format(),
-        ];
+            $pdfSize = file_exists($pdfPath) ? filesize($pdfPath) : 0;
+            $pdfDuration = round((microtime(true) - $startTime) * 1000);
 
-        $audit->recordStep('generate_pdf', 'completed');
+            Log::channel('audits')->info('PDF generated successfully', [
+                'audit_id' => $this->auditId,
+                'pdf_path' => $pdfPath,
+                'pdf_size' => $pdfSize,
+                'duration_ms' => $pdfDuration,
+            ]);
 
-        $audit->markAsCompleted(
-            score: $this->auditData->score->toPercentage(),
-            metrics: $metrics,
-            pdfPath: $pdfPath,
-        );
+            $metrics = [
+                'lcp' => $this->auditData->lcp->format(),
+                'fcp' => $this->auditData->fcp->format(),
+                'cls' => $this->auditData->cls->format(),
+            ];
 
-        $webhookDispatcher->dispatch($audit, $pdfUrl);
+            $audit->recordStep('generate_pdf', 'completed');
+
+            $audit->markAsCompleted(
+                score: $this->auditData->score->toPercentage(),
+                metrics: $metrics,
+                pdfPath: $pdfPath,
+            );
+
+            Log::channel('audits')->info('Audit completed', [
+                'audit_id' => $this->auditId,
+                'score' => $this->auditData->score->toPercentage(),
+                'total_duration_ms' => round((microtime(true) - $startTime) * 1000),
+            ]);
+
+            $webhookDispatcher->dispatch($audit, $pdfUrl);
+        } catch (Throwable $e) {
+            $duration = round((microtime(true) - $startTime) * 1000);
+
+            Log::channel('audits')->error('PDF generation failed', [
+                'audit_id' => $this->auditId,
+                'url' => (string) $this->auditData->targetUrl,
+                'error' => $e->getMessage(),
+                'duration_ms' => $duration,
+                'attempt' => $this->attempts(),
+                'will_retry' => $this->attempts() < $this->tries(),
+            ]);
+
+            throw new PdfGenerationException(
+                "Failed to generate PDF for {$this->auditData->targetUrl}: {$e->getMessage()}",
+                context: [
+                    'audit_id' => $this->auditId,
+                    'url' => (string) $this->auditData->targetUrl,
+                    'score' => $this->auditData->score->toPercentage(),
+                    'duration_ms' => $duration,
+                    'original_error' => $e->getMessage(),
+                ],
+                previous: $e
+            );
+        }
     }
 
     public function failed(?Throwable $exception): void
@@ -56,11 +109,34 @@ final class GenerateAuditPdfJob implements ShouldQueue
         $audit = Audit::find($this->auditId);
 
         if ($audit) {
+            $errorContext = [
+                'exception' => $exception ? get_class($exception) : null,
+                'file' => $exception?->getFile(),
+                'line' => $exception?->getLine(),
+                'url' => (string) $this->auditData->targetUrl,
+                'score' => $this->auditData->score->toPercentage(),
+                'attempts' => $this->attempts(),
+            ];
+
+            if ($exception instanceof PdfGenerationException) {
+                $errorContext = array_merge($errorContext, $exception->context);
+            }
+
             $audit->recordStep('generate_pdf', 'failed', [
                 'error' => $exception?->getMessage() ?? 'Failed to generate PDF',
             ]);
 
-            $audit->markAsFailed($exception?->getMessage() ?? 'Failed to generate PDF');
+            $audit->markAsFailed(
+                $exception?->getMessage() ?? 'Failed to generate PDF',
+                $errorContext
+            );
+
+            Log::channel('audits')->critical('Job permanently failed', [
+                'job' => 'GenerateAuditPdfJob',
+                'audit_id' => $this->auditId,
+                'error' => $exception?->getMessage(),
+                'context' => $errorContext,
+            ]);
         }
     }
 

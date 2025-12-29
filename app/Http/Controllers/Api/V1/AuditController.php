@@ -12,6 +12,7 @@ use App\Jobs\FetchPageSpeedJob;
 use App\Models\Audit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 final class AuditController extends Controller
 {
@@ -20,6 +21,17 @@ final class AuditController extends Controller
         IncrementScanCountAction $countAction,
         CreateOrFindAuditAction $createOrFindAudit,
     ): JsonResponse {
+        $token = $request->user()?->currentAccessToken();
+
+        Log::channel('audits')->info('API request received', [
+            'endpoint' => '/api/v1/scan',
+            'token_id' => $token?->id,
+            'token_name' => $token?->name,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'payload' => $request->only(['url', 'lang', 'strategy']),
+        ]);
+
         try {
             $data = ScanData::validateAndCreate([
                 'url' => $request->input('url'),
@@ -27,6 +39,12 @@ final class AuditController extends Controller
                 'strategy' => $request->input('strategy', 'mobile'),
             ]);
         } catch (\Exception $e) {
+            Log::channel('audits')->warning('Validation failed', [
+                'error' => $e->getMessage(),
+                'ip' => $request->ip(),
+                'payload' => $request->only(['url', 'lang', 'strategy']),
+            ]);
+
             return response()->json([
                 'message' => 'Invalid request',
                 'error' => $e->getMessage(),
@@ -39,7 +57,20 @@ final class AuditController extends Controller
             $data->lang->value
         );
 
+        $audit->update([
+            'created_by_token_id' => $token?->id,
+            'created_by_ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
         if ($audit->wasRecentlyCreated) {
+            Log::channel('audits')->info('New audit created', [
+                'audit_id' => $audit->id,
+                'url' => $audit->url,
+                'strategy' => $audit->strategy,
+                'lang' => $audit->lang,
+            ]);
+
             $countAction->execute();
             FetchPageSpeedJob::dispatch(
                 $audit->id,
@@ -47,6 +78,17 @@ final class AuditController extends Controller
                 $data->strategy->value,
                 $data->lang->value
             );
+
+            Log::channel('audits')->info('Job dispatched', [
+                'audit_id' => $audit->id,
+                'job' => 'FetchPageSpeedJob',
+            ]);
+        } else {
+            Log::channel('audits')->info('Existing audit returned', [
+                'audit_id' => $audit->id,
+                'status' => $audit->status,
+                'reason' => 'idempotency_check',
+            ]);
         }
 
         return response()->json([
