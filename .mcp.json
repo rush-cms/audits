@@ -4,7 +4,7 @@
             "command": "wsl.exe",
             "args": [
                 "/usr/bin/php8.4",
-                "/home/rafhael/www/html/rush-cms/site-audits/artisan",
+                "/home/rafhael/www/html/rush-cms/audits/artisan",
                 "boost:mcp"
             ]
         }
