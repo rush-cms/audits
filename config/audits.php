@@ -27,6 +27,12 @@ return [
         'max_attempts' => (int) env('AUDITS_WEBHOOK_MAX_ATTEMPTS', 5),
     ],
 
+    'notifications' => [
+        'enabled' => (bool) env('AUDITS_NOTIFY_ON_WEBHOOK_FAILURE', true),
+        'admin_email' => env('AUDITS_ADMIN_EMAIL'),
+        'slack_webhook_url' => env('AUDITS_SLACK_WEBHOOK_URL'),
+    ],
+
     'pdf' => [
         'retention_days' => (int) env('AUDITS_RETENTION_DAYS', 7),
     ],
