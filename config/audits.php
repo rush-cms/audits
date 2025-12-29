@@ -33,6 +33,8 @@ return [
 
     'require_screenshots' => (bool) env('AUDITS_REQUIRE_SCREENSHOTS', false),
 
+    'failed_jobs_retention_days' => (int) env('AUDITS_FAILED_JOBS_RETENTION_DAYS', 30),
+
     'browsershot' => [
         'node_binary' => env('BROWSERSHOT_NODE_BINARY', '/usr/bin/node'),
         'npm_binary' => env('BROWSERSHOT_NPM_BINARY', '/usr/bin/npm'),
