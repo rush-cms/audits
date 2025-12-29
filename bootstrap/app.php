@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('audit:prune-pdfs')->daily();
+        $schedule->command('audits:prune-orphaned-screenshots')->daily()->at('03:00');
     })
     ->withMiddleware(function (Middleware $middleware): void {
         //
