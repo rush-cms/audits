@@ -4,77 +4,66 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\CreateOrFindAuditAction;
 use App\Actions\IncrementScanCountAction;
-use App\Data\AuditData;
 use App\Http\Controllers\Controller;
 use App\Jobs\FetchPageSpeedJob;
-use App\Jobs\GenerateAuditPdfJob;
+use App\Models\Audit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 final class AuditController extends Controller
 {
     private const array ALLOWED_LOCALES = ['en', 'pt_BR', 'es'];
 
-    public function store(Request $request, IncrementScanCountAction $countAction): JsonResponse
-    {
-        $countAction->execute();
+    private const array ALLOWED_STRATEGIES = ['mobile', 'desktop'];
 
-        $lang = $this->validateLocale($request->input('lang', 'en'));
-
-        if ($request->has('url')) {
-            return $this->handleUrlRequest($request, $lang);
-        }
-
-        return $this->handlePayloadRequest($request, $lang);
-    }
-
-    private function handleUrlRequest(Request $request, string $lang): JsonResponse
-    {
+    public function store(
+        Request $request,
+        IncrementScanCountAction $countAction,
+        CreateOrFindAuditAction $createOrFindAudit,
+    ): JsonResponse {
         $url = $request->input('url');
 
         if (! is_string($url) || ! filter_var($url, FILTER_VALIDATE_URL)) {
             return response()->json(['error' => 'Invalid URL'], 422);
         }
 
-        $strategy = $request->input('strategy', 'mobile');
-        if (! in_array($strategy, ['mobile', 'desktop'], true)) {
-            $strategy = 'mobile';
+        $lang = $this->validateLocale($request->input('lang', 'en'));
+        $strategy = $this->validateStrategy($request->input('strategy', 'mobile'));
+
+        $audit = $createOrFindAudit->execute($url, $strategy, $lang);
+
+        if ($audit->wasRecentlyCreated) {
+            $countAction->execute();
+            FetchPageSpeedJob::dispatch($audit->id, $url, $strategy, $lang);
         }
-
-        $auditId = (string) Str::uuid();
-
-        FetchPageSpeedJob::dispatch($url, $lang, $strategy);
 
         return response()->json([
             'message' => 'Audit queued',
-            'audit_id' => $auditId,
-            'lang' => $lang,
-            'strategy' => $strategy,
+            'audit_id' => $audit->id,
+            'url' => $audit->url,
+            'lang' => $audit->lang,
+            'strategy' => $audit->strategy,
+            'status' => $audit->status,
         ], 202);
     }
 
-    private function handlePayloadRequest(Request $request, string $lang): JsonResponse
+    public function show(Audit $audit): JsonResponse
     {
-        /** @var array<mixed> $payload */
-        $payload = $request->all();
-
-        if (isset($payload[0]) && is_array($payload[0])) {
-            $payload = $payload[0];
-        }
-
-        $lighthouseResult = $payload['lighthouseResult'] ?? $payload;
-
-        $auditData = AuditData::fromLighthouseResult($lighthouseResult);
-
-        GenerateAuditPdfJob::dispatch($auditData, $lang);
-
         return response()->json([
-            'message' => 'Audit queued',
-            'audit_id' => $auditData->auditId,
-            'lang' => $lang,
-        ], 202);
+            'id' => $audit->id,
+            'url' => $audit->url,
+            'strategy' => $audit->strategy,
+            'lang' => $audit->lang,
+            'status' => $audit->status,
+            'score' => $audit->score,
+            'metrics' => $audit->metrics,
+            'pdf_url' => $audit->pdf_url,
+            'error_message' => $audit->error_message,
+            'created_at' => $audit->created_at?->toIso8601String(),
+            'completed_at' => $audit->completed_at?->toIso8601String(),
+        ]);
     }
 
     private function validateLocale(mixed $lang): string
@@ -84,5 +73,14 @@ final class AuditController extends Controller
         }
 
         return 'en';
+    }
+
+    private function validateStrategy(mixed $strategy): string
+    {
+        if (is_string($strategy) && in_array($strategy, self::ALLOWED_STRATEGIES, true)) {
+            return $strategy;
+        }
+
+        return 'mobile';
     }
 }
