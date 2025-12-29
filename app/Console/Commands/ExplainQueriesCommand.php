@@ -22,7 +22,7 @@ final class ExplainQueriesCommand extends Command
             'Find pending/processing audits by URL and strategy' => "SELECT * FROM audits WHERE url = 'https://example.com' AND strategy = 'mobile' AND status IN ('pending', 'processing') ORDER BY created_at DESC LIMIT 1",
             'Find completed audits by URL and strategy' => "SELECT * FROM audits WHERE url = 'https://example.com' AND strategy = 'mobile' AND status = 'completed' ORDER BY created_at DESC LIMIT 1",
             'Find recent failed audits' => "SELECT * FROM audits WHERE status = 'failed' ORDER BY created_at DESC LIMIT 10",
-            'Count audits by status' => "SELECT status, COUNT(*) as total FROM audits GROUP BY status",
+            'Count audits by status' => 'SELECT status, COUNT(*) as total FROM audits GROUP BY status',
         ];
 
         foreach ($queries as $description => $query) {
