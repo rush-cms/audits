@@ -1,5 +1,5 @@
 <div align="center">
-  <img src=".github/assets/site-audits-banner.webp" alt="Rush CMS Site Audits Banner" width="100%">
+  <img src=".github/assets/audits-banner.webp" alt="Rush CMS Audits Banner" width="100%">
 
   # Rush CMS Audits Microservice
 
@@ -8,7 +8,7 @@
   [![Tests Passing](https://img.shields.io/badge/Tests-24%20passed-00C853?style=flat&logo=pest&logoColor=white)](https://pestphp.com)
   [![License AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue?style=flat)](LICENSE)
 
-  **[rushcms.com/site-audits](https://rushcms.com/site-audits)**
+  **[rushcms.com/audits](https://rushcms.com/audits)**
 </div>
 
 <br>

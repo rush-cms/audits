@@ -1,12 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "rush-cms/audits",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": [
-        "laravel",
-        "framework"
-    ],
+    "description": "Rush CMS Audits Microservice",
     "license": "AGPLv3",
     "require": {
         "php": "^8.2",
