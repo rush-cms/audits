@@ -4,11 +4,22 @@ This guide helps you debug common issues in the Rush CMS Audits microservice.
 
 ## Log Files
 
-All logs are stored in `storage/logs/` and rotate daily:
+All logs are stored in `storage/logs/` organized by type and rotate daily:
 
-- **audits.log** - Audit lifecycle, job execution, API requests (14 day retention)
-- **webhooks.log** - Webhook delivery attempts and responses (7 day retention)
+- **audits/** - Audit lifecycle, job execution, API requests (30 day retention)
+- **webhooks/** - Webhook delivery attempts and responses (14 day retention)
 - **laravel.log** - General application logs (14 day retention)
+
+**Structure:**
+```
+storage/logs/
+├── audits/
+│   ├── app-2025-12-29.log
+│   └── app-2025-12-30.log  (30 days)
+└── webhooks/
+    ├── app-2025-12-29.log
+    └── app-2025-12-30.log  (14 days)
+```
 
 ## Reading Logs
 
@@ -16,16 +27,22 @@ Logs are structured in JSON format for easy parsing:
 
 ```bash
 # Tail audit logs
-tail -f storage/logs/audits-*.log
+tail -f storage/logs/audits/app-*.log
 
 # Search by audit ID
-grep "audit_id.*abc-123" storage/logs/audits-*.log
+grep "audit_id.*abc-123" storage/logs/audits/app-*.log
 
 # Find errors only
-grep '"level":"error"' storage/logs/audits-*.log
+grep '"level":"error"' storage/logs/audits/app-*.log
 
 # Find failed jobs
-grep '"job":.*"failed"' storage/logs/audits-*.log
+grep '"job":.*"failed"' storage/logs/audits/app-*.log
+
+# Tail webhook logs
+tail -f storage/logs/webhooks/app-*.log
+
+# Today's audit logs only
+tail -f storage/logs/audits/app-$(date +%Y-%m-%d).log
 ```
 
 ## Common Issues

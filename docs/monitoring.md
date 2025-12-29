@@ -136,11 +136,11 @@ Audits created in the last hour.
 
 ## Log Files
 
-### audits.log
+### audits/
 Audit lifecycle events, job execution, API requests.
 
-**Location:** `storage/logs/audits-YYYY-MM-DD.log`
-**Retention:** 14 days
+**Location:** `storage/logs/audits/app-YYYY-MM-DD.log`
+**Retention:** 30 days
 **Rotation:** Daily
 
 **Key Events:**
@@ -167,11 +167,11 @@ Audit lifecycle events, job execution, API requests.
 }
 ```
 
-### webhooks.log
+### webhooks/
 Webhook delivery attempts, responses, failures.
 
-**Location:** `storage/logs/webhooks-YYYY-MM-DD.log`
-**Retention:** 7 days
+**Location:** `storage/logs/webhooks/app-YYYY-MM-DD.log`
+**Retention:** 14 days
 **Rotation:** Daily
 
 **Key Events:**

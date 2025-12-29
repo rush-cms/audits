@@ -120,17 +120,17 @@ return [
 
         'audits' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/audits.log'),
+            'path' => storage_path('logs/audits/app.log'),
             'level' => env('LOG_LEVEL', 'info'),
-            'days' => env('LOG_AUDITS_DAYS', 14),
+            'days' => 30,
             'replace_placeholders' => true,
         ],
 
         'webhooks' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/webhooks.log'),
+            'path' => storage_path('logs/webhooks/app.log'),
             'level' => env('LOG_LEVEL', 'info'),
-            'days' => env('LOG_WEBHOOKS_DAYS', 7),
+            'days' => 14,
             'replace_placeholders' => true,
         ],
 

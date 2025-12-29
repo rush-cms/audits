@@ -1,4 +1,6 @@
 *.log
+!storage/logs/audits/.gitkeep
+!storage/logs/webhooks/.gitkeep
 .DS_Store
 .env
 .env.backup
